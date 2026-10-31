@@ -21,6 +21,7 @@ import FilterDropdown from '@/components/FilterDropdown';
 import ProductFormDrawer from '@/components/ProductFormDrawer';
 import { Product, TableColumn } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
+import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
 import { formatCurrencyINR } from '@/lib/sampleData';
 import { useToast } from '@/hooks/useToast';
 
@@ -29,7 +30,9 @@ export default function ProductsPage() {
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [stockFilter, setStockFilter] = useState('all');
 
   // Drawer & Modal States
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
@@ -63,7 +66,16 @@ export default function ProductsPage() {
     INITIAL_PRODUCTS.reduce((acc, p) => acc + p.wholesalePrice, 0) / (INITIAL_PRODUCTS.length || 1)
   );
 
-  // Filtered Products
+  // Category filter options (kept in UI, not filtered from frontend)
+  const categoryOptions = [
+    { label: 'All Categories', value: 'all' },
+    ...INITIAL_CATEGORIES.map((cat) => ({
+      label: cat.name,
+      value: cat.name,
+    })),
+  ];
+
+  // Filtered Products (Category and Stock are not filtered from frontend)
   const q = searchTerm.toLowerCase();
   const filteredProducts = INITIAL_PRODUCTS.filter((p) => {
     // Search: Product Name or Design Number
@@ -261,18 +273,39 @@ export default function ProductsPage() {
     },
   ];
 
-  // Filters component passed to CommonTable (Category & Stock filters removed from frontend)
+  // Filters component passed to CommonTable (Category & Stock kept in UI, but not filtered from frontend)
   const tableFilters = (
-    <FilterDropdown
-      label="Status"
-      options={[
-        { label: 'All Status', value: 'all' },
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-      ]}
-      selected={statusFilter}
-      onSelect={setStatusFilter}
-    />
+    <>
+      <FilterDropdown
+        label="Category"
+        options={categoryOptions}
+        selected={categoryFilter}
+        onSelect={setCategoryFilter}
+      />
+
+      <FilterDropdown
+        label="Stock"
+        options={[
+          { label: 'All Stock', value: 'all' },
+          { label: 'In Stock', value: 'in_stock' },
+          { label: 'Low Stock', value: 'low_stock' },
+          { label: 'Out of Stock', value: 'out_of_stock' },
+        ]}
+        selected={stockFilter}
+        onSelect={setStockFilter}
+      />
+
+      <FilterDropdown
+        label="Status"
+        options={[
+          { label: 'All Status', value: 'all' },
+          { label: 'Active', value: 'active' },
+          { label: 'Inactive', value: 'inactive' },
+        ]}
+        selected={statusFilter}
+        onSelect={setStatusFilter}
+      />
+    </>
   );
 
   return (
