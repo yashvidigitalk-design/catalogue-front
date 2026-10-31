@@ -95,16 +95,6 @@ export const SAMPLE_PREVIEW_PRODUCTS = [
     patternType: 'organza',
     accentColor: '#E11D48',
   },
-  {
-    id: 'p6',
-    designNo: 'DES #HT-334',
-    name: 'Handloom Tussar Yardage',
-    price: '₹480',
-    unit: 'mtr',
-    moq: '200 mtr',
-    patternType: 'tussar',
-    accentColor: '#6B7280',
-  },
 ];
 
 export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {

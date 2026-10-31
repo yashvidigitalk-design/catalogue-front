@@ -128,7 +128,7 @@ export default function CommonTable<T>({
                   <th
                     key={col.key}
                     style={{ width: col.width }}
-                    className={`h-11 px-3.5 py-2.5 font-semibold ${alignClass} ${stickyClass} ${col.className || ''}`}
+                    className={`h-11 px-3.5 py-2.5 font-semibold whitespace-nowrap ${alignClass} ${stickyClass} ${col.className || ''}`}
                   >
                     {col.header}
                   </th>

@@ -82,28 +82,11 @@ export default function BuyersPage() {
       key: 'name',
       header: 'Buyer Name',
       width: '160px',
-      render: (b) => {
-        const initials = b.name
-          .split(' ')
-          .map((n) => n[0])
-          .join('')
-          .substring(0, 2)
-          .toUpperCase();
-        return (
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                b.avatarColor || 'bg-[#EEF2FF] text-[#4E45D5]'
-              }`}
-            >
-              {initials}
-            </div>
-            <div className="font-semibold text-xs text-[#100E26] truncate max-w-[110px]" title={b.name}>
-              {b.name}
-            </div>
-          </div>
-        );
-      },
+      render: (b) => (
+        <div className="font-semibold text-xs text-[#100E26] truncate" title={b.name}>
+          {b.name}
+        </div>
+      ),
     },
     {
       key: 'businessName',

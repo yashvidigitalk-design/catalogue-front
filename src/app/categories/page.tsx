@@ -115,8 +115,8 @@ export default function CategoriesPage() {
   const categoryColumns: TableColumn<Category>[] = [
     {
       key: 'image',
-      header: 'Category Image',
-      width: '90px',
+      header: 'Image',
+      width: '75px',
       render: (cat) => (
         <div
           onClick={() => setViewingCategory(cat)}
@@ -150,8 +150,8 @@ export default function CategoriesPage() {
     },
     {
       key: 'visibleOnStorefront',
-      header: 'Visible on Storefront',
-      width: '180px',
+      header: 'Storefront',
+      width: '140px',
       render: (cat) => (
         <StatusBadge
           label={cat.visibleOnStorefront ? 'Visible' : 'Hidden'}
