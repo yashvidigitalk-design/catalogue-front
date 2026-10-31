@@ -1,0 +1,294 @@
+'use client';
+
+import React, { useState } from 'react';
+import { ArrowRight, Layers, Package, Plus, Minus } from 'lucide-react';
+import CommonDrawer from '@/components/CommonDrawer';
+import StatusBadge from '@/components/StatusBadge';
+import { StockItem } from '@/types';
+import { useToast } from '@/hooks/useToast';
+
+interface StockAdjustDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  item: StockItem | null;
+  mode: 'in' | 'out';
+  threshold: number;
+  onSave: (itemId: string, mode: 'in' | 'out', quantity: number, remark?: string) => void;
+}
+
+export default function StockAdjustDrawer({
+  open,
+  onClose,
+  item,
+  mode,
+  threshold,
+  onSave,
+}: StockAdjustDrawerProps) {
+  const { showToast } = useToast();
+
+  const [quantity, setQuantity] = useState<string>('');
+  const [remark, setRemark] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  const [prevOpen, setPrevOpen] = useState(false);
+  const [prevItem, setPrevItem] = useState<StockItem | null>(null);
+  const [prevMode, setPrevMode] = useState<'in' | 'out'>('in');
+
+  // Synchronize state when open, item or mode changes without cascading effect renders
+  if (open !== prevOpen || item !== prevItem || mode !== prevMode) {
+    setPrevOpen(open);
+    setPrevItem(item);
+    setPrevMode(mode);
+    setQuantity('');
+    setRemark('');
+    setError('');
+  }
+
+  if (!item) return null;
+
+  const currentAvailable = item.availableStock;
+  const numQty = parseInt(quantity, 10);
+  const hasValidQty = !isNaN(numQty) && numQty > 0;
+
+  let calculatedAvailable = currentAvailable;
+  if (hasValidQty) {
+    calculatedAvailable =
+      mode === 'in' ? currentAvailable + numQty : Math.max(0, currentAvailable - numQty);
+  }
+
+  // Determine resulting stock status
+  const resultingStatus =
+    calculatedAvailable === 0
+      ? 'out_of_stock'
+      : calculatedAvailable <= threshold
+      ? 'low_stock'
+      : 'in_stock';
+
+  const resultingBadge =
+    resultingStatus === 'out_of_stock' ? (
+      <StatusBadge label="Out of Stock" variant="red" size="sm" />
+    ) : resultingStatus === 'low_stock' ? (
+      <StatusBadge label="Low Stock" variant="amber" size="sm" />
+    ) : (
+      <StatusBadge label="In Stock" variant="green" size="sm" />
+    );
+
+  const handleQuantityChange = (val: string) => {
+    setQuantity(val);
+    const parsed = parseInt(val, 10);
+    if (val === '') {
+      setError('');
+      return;
+    }
+    if (isNaN(parsed) || parsed <= 0) {
+      setError('Please enter a positive whole number');
+      return;
+    }
+    if (mode === 'out' && parsed > currentAvailable) {
+      setError(`Quantity cannot exceed available stock (${currentAvailable} meters)`);
+      return;
+    }
+    setError('');
+  };
+
+  const handleSave = () => {
+    if (!hasValidQty) {
+      setError('Please enter a valid quantity greater than 0');
+      return;
+    }
+    if (mode === 'out' && numQty > currentAvailable) {
+      setError(`Quantity cannot exceed available stock (${currentAvailable} meters)`);
+      return;
+    }
+
+    onSave(item.id, mode, numQty, remark.trim() || undefined);
+    showToast('success', mode === 'in' ? 'Stock added' : 'Stock removed');
+    onClose();
+  };
+
+  const isStockIn = mode === 'in';
+
+  const footerActions = (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={handleSave}
+        className={`h-10 px-5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs ${
+          isStockIn
+            ? 'bg-[#059669] hover:bg-[#047857] text-white'
+            : 'bg-[#E11D48] hover:bg-[#BE123C] text-white'
+        }`}
+      >
+        {isStockIn ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+        <span>{isStockIn ? 'Save Stock In' : 'Save Stock Out'}</span>
+      </button>
+    </div>
+  );
+
+  return (
+    <CommonDrawer
+      isOpen={open}
+      onClose={onClose}
+      title={isStockIn ? 'Stock In Inventory' : 'Stock Out Inventory'}
+      description={`Record incoming mill batches or outgoing roll dispatches for ${item.designNumber}.`}
+      cancelText="Cancel"
+      width="lg"
+      footerActions={footerActions}
+    >
+      <div className="space-y-5">
+        {/* Current Stock Info Card */}
+        <div className="p-4 bg-[#F7F7FB] border border-[#E2E1EC] rounded-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#4E45D5]" />
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#100E26]">
+                Product Overview
+              </h4>
+            </div>
+
+            <span
+              className={`px-2.5 py-0.5 rounded text-xs font-bold border font-tabular ${
+                isStockIn
+                  ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
+                  : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+              }`}
+            >
+              {isStockIn ? '+ Stock In' : '- Stock Out'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#FFFFFF] shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.productImage}
+                alt={item.productName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h4 className="font-bold text-sm text-[#100E26] truncate">
+                {item.productName}
+              </h4>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 rounded bg-[#EEF2FF] text-[#4E45D5] border border-[#C7D2FE] text-xs font-semibold font-tabular">
+                  {item.designNumber}
+                </span>
+                <span className="text-xs text-[#5A586E] truncate">
+                  {item.fabric}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E2E1EC] text-xs">
+            <div className="p-2.5 bg-white border border-[#E2E1EC] rounded-lg">
+              <span className="text-[#9493A8] text-[10px] uppercase font-semibold block">
+                Current Available Stock
+              </span>
+              <span className="font-bold text-base text-[#100E26] font-tabular mt-0.5 block">
+                {item.availableStock.toLocaleString('en-IN')} meters
+              </span>
+            </div>
+
+            <div className="p-2.5 bg-white border border-[#E2E1EC] rounded-lg">
+              <span className="text-[#9493A8] text-[10px] uppercase font-semibold block">
+                Reserved Stock (Orders)
+              </span>
+              <span className="font-bold text-base text-[#5A586E] font-tabular mt-0.5 block">
+                {item.reservedStock.toLocaleString('en-IN')} meters
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quantity Input */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
+            Quantity {isStockIn ? 'to Add' : 'to Deduct'} (meters){' '}
+            <span className="text-[#E11D48]">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(e) => handleQuantityChange(e.target.value)}
+              placeholder="e.g. 100"
+              className={`input-base font-tabular ${
+                error ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
+              }`}
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-xs text-[#E11D48] mt-1">{error}</p>}
+        </div>
+
+        {/* Remark Textarea (optional) */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
+            Remark / Reason (Optional)
+          </label>
+          <textarea
+            rows={3}
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            placeholder={
+              isStockIn
+                ? 'e.g. Received fresh thaan rolls from loom unit #4, batch QC passed...'
+                : 'e.g. Dispatched against order #ORD-8921, sample cutting, damaged selvage...'
+            }
+            className="w-full p-2.5 text-sm bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none"
+          />
+        </div>
+
+        {/* Updated Stock Preview Card (Live Update) */}
+        <div className="p-4 rounded-xl bg-[#F7F7FB] border border-[#E2E1EC] space-y-3">
+          <div className="flex items-center gap-2">
+            <Package className="w-4 h-4 text-[#4E45D5]" />
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#100E26]">
+              Live Stock Projection Preview
+            </h4>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-[#E2E1EC]">
+            <div className="text-center sm:text-left">
+              <span className="text-[10px] uppercase font-semibold text-[#9493A8] block">
+                Current Available
+              </span>
+              <span className="font-bold text-sm text-[#100E26] font-tabular">
+                {currentAvailable.toLocaleString('en-IN')} m
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-[#9493A8]">
+              <ArrowRight className="w-4 h-4" />
+            </div>
+
+            <div className="text-center sm:text-left">
+              <span className="text-[10px] uppercase font-semibold text-[#9493A8] block">
+                Projected Available
+              </span>
+              <span
+                className={`font-bold text-base font-tabular ${
+                  isStockIn ? 'text-[#059669]' : 'text-[#E11D48]'
+                }`}
+              >
+                {calculatedAvailable.toLocaleString('en-IN')} m
+              </span>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] uppercase font-semibold text-[#9493A8] block mb-1">
+                New Status
+              </span>
+              {resultingBadge}
+            </div>
+          </div>
+        </div>
+      </div>
+    </CommonDrawer>
+  );
+}
+

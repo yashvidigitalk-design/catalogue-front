@@ -11,8 +11,10 @@ interface ConfirmationModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'primary' | 'warning';
+  variant?: 'danger' | 'primary' | 'warning' | 'success';
+  tag?: React.ReactNode;
   showRemark?: boolean;
+  remarkRequired?: boolean;
   remarkLabel?: string;
   remarkPlaceholder?: string;
 }
@@ -26,26 +28,42 @@ export default function ConfirmationModal({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  tag,
   showRemark = false,
+  remarkRequired = false,
   remarkLabel = 'Remarks / Reason (Optional)',
   remarkPlaceholder = 'Add any notes, batch instructions or dispatch reasons...',
 }: ConfirmationModalProps) {
   const [remark, setRemark] = useState('');
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    if (remarkRequired && !remark.trim()) {
+      setError('A remark is required to proceed.');
+      return;
+    }
+    setError('');
     onConfirm(remark);
     setRemark('');
   };
 
   const handleCancel = () => {
     setRemark('');
+    setError('');
     onClose();
   };
 
   const getVariantStyles = () => {
     switch (variant) {
+      case 'success':
+        return {
+          iconBg: 'bg-[#ECFDF5]',
+          iconColor: 'text-[#059669]',
+          confirmBtn: 'bg-[#059669] hover:bg-[#047857] text-white',
+          icon: <CheckCircle className="w-6 h-6 text-[#059669]" />,
+        };
       case 'danger':
         return {
           iconBg: 'bg-[#FFF1F2]',
@@ -77,7 +95,7 @@ export default function ConfirmationModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-150 animate-in fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-150 animate-in fade-in"
     >
       <div
         className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-[#E2E1EC] p-6 overflow-hidden animate-in zoom-in-95 duration-150"
@@ -92,9 +110,12 @@ export default function ConfirmationModal({
 
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#100E26] leading-tight">
-                {title}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-[#100E26] leading-tight">
+                  {title}
+                </h3>
+                {tag && <div>{tag}</div>}
+              </div>
               <button
                 type="button"
                 onClick={handleCancel}
@@ -112,15 +133,21 @@ export default function ConfirmationModal({
             {showRemark && (
               <div className="mt-4">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  {remarkLabel}
+                  {remarkLabel} {remarkRequired && <span className="text-[#E11D48]">*</span>}
                 </label>
                 <textarea
                   value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
+                  onChange={(e) => {
+                    setRemark(e.target.value);
+                    if (error) setError('');
+                  }}
                   placeholder={remarkPlaceholder}
                   rows={3}
-                  className="w-full p-2.5 text-sm bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none"
+                  className={`w-full p-2.5 text-sm bg-white border ${
+                    error ? 'border-[#E11D48]' : 'border-[#E2E1EC]'
+                  } rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none`}
                 />
+                {error && <p className="text-xs text-[#E11D48] mt-1">{error}</p>}
               </div>
             )}
 

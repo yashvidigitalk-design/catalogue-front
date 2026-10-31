@@ -12,6 +12,8 @@ interface CommonTableProps<T> {
   searchPlaceholder?: string;
   onSearch?: (query: string) => void;
   searchValue?: string;
+  showSearch?: boolean;
+  onRowClick?: (item: T) => void;
   pageSize?: number;
   totalRecords?: number;
   currentPage?: number;
@@ -27,6 +29,8 @@ export default function CommonTable<T>({
   searchPlaceholder = 'Search records...',
   onSearch,
   searchValue: controlledSearch,
+  showSearch = true,
+  onRowClick,
   pageSize = 10,
   totalRecords: externalTotal,
   currentPage: externalPage,
@@ -52,7 +56,12 @@ export default function CommonTable<T>({
   };
 
   const isControlledPagination = externalPage !== undefined;
-  const activePage = isControlledPagination ? externalPage : internalPage;
+  const totalCount = externalTotal !== undefined ? externalTotal : data.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  // Automatically clamp activePage to valid range
+  const rawActivePage = isControlledPagination ? externalPage : internalPage;
+  const activePage = Math.min(Math.max(1, rawActivePage), totalPages);
 
   const handlePageChange = (page: number) => {
     if (isControlledPagination) {
@@ -72,30 +81,33 @@ export default function CommonTable<T>({
     return data.slice(startIndex, startIndex + pageSize);
   }, [data, activePage, pageSize, externalTotal]);
 
-  const totalCount = externalTotal !== undefined ? externalTotal : data.length;
-  const totalPages = Math.ceil(totalCount / pageSize);
-
   return (
-    <div className="bg-white border border-[#E2E1EC] rounded-xl shadow-xs overflow-hidden flex flex-col">
-      {/* Top Bar: SearchInput on left, filters on right */}
-      <div className="p-4 border-b border-[#E2E1EC] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="w-full sm:w-72 md:w-80">
-          <SearchInput
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder={searchPlaceholder}
-          />
+    <div className="bg-white border border-[#E2E1EC] rounded-xl shadow-xs overflow-hidden flex flex-col w-full">
+      {/* TOP: Search on left, Filters on right */}
+      {(showSearch || filters) && (
+        <div className="p-4 border-b border-[#E2E1EC] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {showSearch ? (
+            <div className="w-full sm:w-72 md:w-80">
+              <SearchInput
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder={searchPlaceholder}
+              />
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {filters && (
+            <div className="flex flex-wrap items-center gap-2.5 justify-start sm:justify-end">
+              {filters}
+            </div>
+          )}
         </div>
+      )}
 
-        {filters && (
-          <div className="flex flex-wrap items-center gap-2.5 justify-start sm:justify-end">
-            {filters}
-          </div>
-        )}
-      </div>
-
-      {/* Middle: Dynamic columns, consistent row height, horizontal scroll */}
-      <div className="overflow-x-auto min-h-[320px]">
+      {/* MIDDLE: Columns, compact row height, horizontal scroll on small screens, sticky Actions column */}
+      <div className="overflow-x-auto min-h-[300px]">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[#E2E1EC] bg-[#F7F7FB] text-xs font-semibold text-[#5A586E] uppercase tracking-wider">
@@ -106,11 +118,17 @@ export default function CommonTable<T>({
                     : col.align === 'center'
                     ? 'text-center'
                     : 'text-left';
+
+                const isStickyRight = col.sticky === 'right' || col.key === 'actions';
+                const stickyClass = isStickyRight
+                  ? 'sticky right-0 z-20 bg-[#F7F7FB] shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)]'
+                  : '';
+
                 return (
                   <th
                     key={col.key}
                     style={{ width: col.width }}
-                    className={`h-11 px-4 py-3 font-semibold ${alignClass} ${col.className || ''}`}
+                    className={`h-11 px-3.5 py-2.5 font-semibold ${alignClass} ${stickyClass} ${col.className || ''}`}
                   >
                     {col.header}
                   </th>
@@ -124,7 +142,7 @@ export default function CommonTable<T>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="h-64 text-center text-[#5A586E]"
+                  className="h-48 text-center text-[#5A586E]"
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="w-6 h-6 border-2 border-[#4E45D5]/20 border-t-[#4E45D5] rounded-full animate-spin" />
@@ -133,11 +151,11 @@ export default function CommonTable<T>({
                 </td>
               </tr>
             ) : processedData.length === 0 ? (
-              /* If data is empty it must show exactly: "No data found" */
+              /* EMPTY: exactly the text "No data found" */
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="h-64 text-center text-[#5A586E] font-medium"
+                  className="h-48 text-center text-[#5A586E] font-medium"
                 >
                   No data found
                 </td>
@@ -151,7 +169,10 @@ export default function CommonTable<T>({
                 return (
                   <tr
                     key={String(rowKey)}
-                    className="h-14 hover:bg-[#F7F7FB]/70 transition-colors"
+                    onClick={() => onRowClick && onRowClick(row)}
+                    className={`h-13 group hover:bg-[#F7F7FB] transition-colors ${
+                      onRowClick ? 'cursor-pointer' : ''
+                    }`}
                   >
                     {columns.map((col) => {
                       const alignClass =
@@ -160,6 +181,11 @@ export default function CommonTable<T>({
                           : col.align === 'center'
                           ? 'text-center'
                           : 'text-left';
+
+                      const isStickyRight = col.sticky === 'right' || col.key === 'actions';
+                      const stickyClass = isStickyRight
+                        ? 'sticky right-0 z-10 bg-white group-hover:bg-[#F7F7FB] shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)]'
+                        : '';
 
                       const cellContent = col.render
                         ? col.render(row, rowIndex)
@@ -170,7 +196,7 @@ export default function CommonTable<T>({
                       return (
                         <td
                           key={col.key}
-                          className={`px-4 py-3 align-middle ${alignClass} ${col.className || ''}`}
+                          className={`px-3.5 py-2.5 align-middle ${alignClass} ${stickyClass} ${col.className || ''}`}
                         >
                           {cellContent}
                         </td>
@@ -184,7 +210,7 @@ export default function CommonTable<T>({
         </table>
       </div>
 
-      {/* Bottom: Pagination */}
+      {/* BOTTOM: Pagination with records count, buttons, and page info */}
       <Pagination
         currentPage={activePage}
         totalPages={totalPages}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { UploadCloud, X, Star, Image as ImageIcon, Plus } from 'lucide-react';
+import { UploadCloud, X, Plus } from 'lucide-react';
 
 interface ImageUploadProps {
   initialImages?: string[];
@@ -51,20 +51,6 @@ export default function ImageUpload({
 
   const handleSetPrimary = (index: number) => {
     setPrimaryIndex(index);
-  };
-
-  const handleSampleAdd = () => {
-    const sampleFabrics = [
-      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1528458876885-5b6eacb60431?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1607344645866-009c320b5ab8?w=400&auto=format&fit=crop&q=80',
-    ];
-    if (images.length < maxImages) {
-      const nextSample = sampleFabrics[images.length % sampleFabrics.length];
-      const updated = [...images, nextSample];
-      updateImages(updated);
-    }
   };
 
   return (
@@ -121,19 +107,6 @@ export default function ImageUpload({
           <p className="text-xs text-[#9493A8]">PNG, JPG, WebP up to 10MB each</p>
         </div>
       </div>
-
-      {/* Quick Demo helper button if empty */}
-      {images.length === 0 && (
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={handleSampleAdd}
-            className="text-xs font-medium text-[#4E45D5] hover:underline inline-flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" /> Or load sample textile swatches for demo
-          </button>
-        </div>
-      )}
 
       {/* Image Preview Grid */}
       {images.length > 0 && (
