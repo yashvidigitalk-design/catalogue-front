@@ -15,6 +15,9 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  LayoutTemplate,
+  Share2,
   X,
   Layers,
   Sparkles,
@@ -33,7 +36,7 @@ interface NavItemConfig {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const NAV_ITEMS: NavItemConfig[] = [
+const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Categories', path: '/categories', icon: FolderTree },
   { label: 'Products', path: '/products', icon: Package },
@@ -42,7 +45,11 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Inquiries', path: '/inquiries', icon: MessageSquareText },
   { label: 'Orders', path: '/orders', icon: ShoppingBag },
   { label: 'Stock', path: '/stock', icon: Boxes },
-  { label: 'Settings', path: '/settings', icon: Settings },
+];
+
+const SETTINGS_SUB_ITEMS: NavItemConfig[] = [
+  { label: 'Catalogue Templates', path: '/settings/catalogue-templates', icon: LayoutTemplate },
+  { label: 'WhatsApp Sharing', path: '/settings/whatsapp-sharing', icon: Share2 },
 ];
 
 export default function Sidebar({
@@ -52,6 +59,14 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
+  const isSettingsActive = pathname.startsWith('/settings');
+  const [settingsOpen, setSettingsOpen] = React.useState(isSettingsActive);
+
+  React.useEffect(() => {
+    if (isSettingsActive) {
+      setSettingsOpen(true);
+    }
+  }, [isSettingsActive]);
 
   const isLinkActive = (path: string) => {
     return pathname === path || pathname.startsWith(path + '/');
@@ -98,7 +113,7 @@ export default function Sidebar({
 
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
-        {NAV_ITEMS.map((item) => {
+        {PRIMARY_NAV_ITEMS.map((item) => {
           const active = isLinkActive(item.path);
           const Icon = item.icon;
 
@@ -135,6 +150,93 @@ export default function Sidebar({
             </div>
           );
         })}
+
+        {/* Expandable Settings Item */}
+        <div className="relative group pt-1">
+          {collapsed ? (
+            /* Collapsed icon rail: Settings shows only icon with tooltip, clicks to /settings/catalogue-templates */
+            <div className="relative group">
+              <Link
+                href="/settings/catalogue-templates"
+                onClick={onCloseMobile}
+                className={`flex items-center justify-center h-11 w-11 mx-auto rounded-xl text-sm font-medium transition-all ${
+                  isSettingsActive
+                    ? 'bg-[#4E45D5] text-white shadow-sm font-semibold'
+                    : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]'
+                }`}
+              >
+                <Settings
+                  className={`w-5 h-5 shrink-0 ${
+                    isSettingsActive ? 'text-white' : 'text-[#A9A7C0] group-hover:text-white'
+                  }`}
+                />
+              </Link>
+
+              <div className="hidden md:block absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-[#0B091C] text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl border border-[#2B2848] whitespace-nowrap">
+                  Settings
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Expanded & Mobile: Settings row toggles submenu */
+            <div>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isSettingsActive
+                    ? 'bg-[#17142F] text-white font-semibold'
+                    : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <Settings
+                    className={`w-5 h-5 shrink-0 ${
+                      isSettingsActive ? 'text-[#6860EF]' : 'text-[#A9A7C0]'
+                    }`}
+                  />
+                  <span>Settings</span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-[#A9A7C0] transition-transform duration-200 ${
+                    settingsOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Submenu with 2 items */}
+              {settingsOpen && (
+                <div className="mt-1 space-y-1 pl-3">
+                  {SETTINGS_SUB_ITEMS.map((sub) => {
+                    const isSubActive = pathname === sub.path || pathname.startsWith(sub.path + '/');
+                    const SubIcon = sub.icon;
+
+                    return (
+                      <Link
+                        key={sub.path}
+                        href={sub.path}
+                        onClick={onCloseMobile}
+                        className={`flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                          isSubActive
+                            ? 'bg-[#4E45D5] text-white shadow-xs font-semibold'
+                            : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]'
+                        }`}
+                      >
+                        <SubIcon
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isSubActive ? 'text-white' : 'text-[#A9A7C0]'
+                          }`}
+                        />
+                        <span className="truncate">{sub.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </nav>
 
 

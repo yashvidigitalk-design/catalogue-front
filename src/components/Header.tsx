@@ -64,9 +64,26 @@ export default function Header({
 
             <ChevronRight className="w-3.5 h-3.5 text-[#9493A8] shrink-0" />
 
-            <span className="text-[#100E26] font-bold truncate">
-              {pageTitle}
-            </span>
+            {segments[0] === 'settings' && segments[1] ? (
+              <>
+                <Link
+                  href="/settings/catalogue-templates"
+                  className="text-[#5A586E] hover:text-[#4E45D5] transition-colors"
+                >
+                  Settings
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-[#9493A8] shrink-0" />
+                <span className="text-[#100E26] font-bold truncate">
+                  {segments[1] === 'whatsapp-sharing'
+                    ? 'WhatsApp Sharing'
+                    : 'Catalogue Templates'}
+                </span>
+              </>
+            ) : (
+              <span className="text-[#100E26] font-bold truncate">
+                {pageTitle}
+              </span>
+            )}
           </nav>
         </div>
 
