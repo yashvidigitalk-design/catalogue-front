@@ -14,7 +14,8 @@ interface CommonDrawerProps {
   cancelText?: string;
   isSaving?: boolean;
   footerActions?: React.ReactNode;
-  width?: 'md' | 'lg' | 'xl';
+  width?: 'md' | 'lg' | 'xl' | '2xl';
+  zIndex?: string;
 }
 
 export default function CommonDrawer({
@@ -29,6 +30,7 @@ export default function CommonDrawer({
   isSaving = false,
   footerActions,
   width = 'lg',
+  zIndex = 'z-50',
 }: CommonDrawerProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,13 +54,14 @@ export default function CommonDrawer({
     md: 'max-w-md',
     lg: 'max-w-xl',
     xl: 'max-w-2xl',
-  }[width];
+    '2xl': 'max-w-4xl',
+  }[width] || 'max-w-xl';
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 overflow-hidden"
+      className={`fixed inset-0 ${zIndex} overflow-hidden`}
     >
       {/* Backdrop */}
       <div
