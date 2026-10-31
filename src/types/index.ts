@@ -135,6 +135,7 @@ export interface Product {
   mrp: number;
   stock: number;
   moq: number;
+  unit?: string;
   weight?: string;
   status: 'active' | 'inactive';
   description?: string;

@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import CommonTable from '@/components/CommonTable';
+import FilterDropdown from '@/components/FilterDropdown';
 import ProductFormDrawer from '@/components/ProductFormDrawer';
 import { Product, TableColumn } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
+import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
 
 interface ProductSelectionDrawerProps {
   open: boolean;
@@ -24,6 +26,7 @@ export default function ProductSelectionDrawer({
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedProductIds);
   const [productsList, setProductsList] = useState<Product[]>(INITIAL_PRODUCTS);
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
   const [prevOpen, setPrevOpen] = useState(false);
@@ -32,6 +35,7 @@ export default function ProductSelectionDrawer({
     if (open) {
       setSelectedIds(initialSelectedProductIds);
       setSearchTerm('');
+      setCategoryFilter('all');
     }
   }
 
@@ -42,7 +46,16 @@ export default function ProductSelectionDrawer({
     );
   };
 
-  // Filter products by search (Category filter removed from frontend)
+  // Category filter options (kept in UI, not filtered from frontend)
+  const categoryOptions = [
+    { label: 'All Categories', value: 'all' },
+    ...INITIAL_CATEGORIES.map((cat) => ({
+      label: cat.name,
+      value: cat.name,
+    })),
+  ];
+
+  // Filter products by search (Category filter is NOT filtered from frontend)
   const q = searchTerm.toLowerCase();
   const filteredProducts = productsList.filter((p) => {
     return (
@@ -201,10 +214,18 @@ export default function ProductSelectionDrawer({
             </button>
           </div>
 
-          {/* CommonTable for selectable products with Row Click selection & no category filter */}
+          {/* CommonTable with Row Click selection & Category filter kept in UI (not filtered on front) */}
           <CommonTable
             columns={columns}
             data={filteredProducts}
+            filters={
+              <FilterDropdown
+                label="Category"
+                options={categoryOptions}
+                selected={categoryFilter}
+                onSelect={setCategoryFilter}
+              />
+            }
             onRowClick={(p) => toggleSelect(p.id)}
             searchPlaceholder="Search by name or design number..."
             onSearch={setSearchTerm}
