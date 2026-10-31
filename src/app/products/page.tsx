@@ -161,19 +161,43 @@ export default function ProductsPage() {
     {
       key: 'stock',
       header: 'Stock',
-      width: '135px',
+      width: '75px',
       render: (p) => (
-        <div className="flex items-center gap-1.5 whitespace-nowrap">
-          <span className="text-xs font-medium font-tabular text-[#100E26]">
-            {p.stock}
-          </span>
-          <StatusBadge
-            label={p.stock === 0 ? 'Out of Stock' : p.stock <= 10 ? 'Low Stock' : 'In Stock'}
-            variant={p.stock === 0 ? 'red' : p.stock <= 10 ? 'amber' : 'green'}
-            size="sm"
-          />
-        </div>
+        <span className="font-bold text-xs font-tabular text-[#100E26]">
+          {p.stock.toLocaleString('en-IN')}
+        </span>
       ),
+    },
+    {
+      key: 'stockStatus',
+      header: 'Stock Status',
+      width: '115px',
+      render: (p) => {
+        const isOutOfStock = p.stock === 0;
+        const isLowStock = p.stock > 0 && p.stock <= 10;
+        const statusText = isOutOfStock
+          ? 'Out of Stock'
+          : isLowStock
+          ? 'Low Stock'
+          : 'In Stock';
+        const colorClass = isOutOfStock
+          ? 'text-[#E11D48]'
+          : isLowStock
+          ? 'text-[#D97706]'
+          : 'text-[#059669]';
+        const dotBgClass = isOutOfStock
+          ? 'bg-[#E11D48]'
+          : isLowStock
+          ? 'bg-[#D97706]'
+          : 'bg-[#059669]';
+
+        return (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${colorClass}`}>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotBgClass}`} />
+            <span>{statusText}</span>
+          </span>
+        );
+      },
     },
     {
       key: 'moq',

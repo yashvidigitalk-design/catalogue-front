@@ -9,19 +9,18 @@ import {
   Plus,
   Edit2,
   Trash2,
-  MinusCircle,
 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import StatCard from '@/components/StatCard';
 import CommonTable from '@/components/CommonTable';
 import CommonDrawer from '@/components/CommonDrawer';
+import CategoryDetailsDrawer from '@/components/CategoryDetailsDrawer';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import StatusBadge from '@/components/StatusBadge';
 import FilterDropdown from '@/components/FilterDropdown';
 import ImageUpload from '@/components/ImageUpload';
-import { Category, Product, TableColumn } from '@/types';
+import { Category, TableColumn } from '@/types';
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
-import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { useToast } from '@/hooks/useToast';
 
 export default function CategoriesPage() {
@@ -37,7 +36,6 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [productToRemove, setProductToRemove] = useState<Product | null>(null);
 
   // Category Add/Edit Form State
   const [formName, setFormName] = useState('');
@@ -89,12 +87,6 @@ export default function CategoriesPage() {
     setCategoryToDelete(null);
   };
 
-  // Confirm Remove Product from Category
-  const handleConfirmRemoveProduct = () => {
-    showToast('success', 'Product removed from category');
-    setProductToRemove(null);
-  };
-
   // Stat Card Calculations
   const totalCategories = INITIAL_CATEGORIES.length;
   const visibleCategories = INITIAL_CATEGORIES.filter((c) => c.visibleOnStorefront).length;
@@ -126,7 +118,11 @@ export default function CategoriesPage() {
       header: 'Category Image',
       width: '90px',
       render: (cat) => (
-        <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB] shrink-0">
+        <div
+          onClick={() => setViewingCategory(cat)}
+          className="w-11 h-11 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB] shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          title="View Category Details"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={cat.image}
@@ -140,8 +136,12 @@ export default function CategoriesPage() {
       key: 'name',
       header: 'Category Name',
       render: (cat) => (
-        <div>
-          <div className="font-semibold text-[#100E26] text-sm">{cat.name}</div>
+        <div
+          onClick={() => setViewingCategory(cat)}
+          className="cursor-pointer group"
+          title="View Category Details"
+        >
+          <div className="font-semibold text-[#100E26] text-sm group-hover:text-[#4E45D5] transition-colors">{cat.name}</div>
           <div className="text-xs text-[#5A586E] truncate max-w-sm mt-0.5">
             {cat.subtitle}
           </div>
@@ -219,92 +219,6 @@ export default function CategoriesPage() {
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-      ),
-    },
-  ];
-
-  // Products belonging to the viewed category
-  const directMatches = viewingCategory
-    ? INITIAL_PRODUCTS.filter((p) => p.category === viewingCategory.name)
-    : [];
-  const baseCategoryList =
-    directMatches.length > 0 ? directMatches : INITIAL_PRODUCTS.slice(0, 4);
-
-  // Drawer Table Columns for Products inside Category View
-  const drawerProductColumns: TableColumn<Product>[] = [
-    {
-      key: 'image',
-      header: 'Product Image',
-      width: '56px',
-      render: (p) => (
-        <div className="w-9 h-9 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-        </div>
-      ),
-    },
-    {
-      key: 'name',
-      header: 'Product Name',
-      render: (p) => (
-        <div className="max-w-[220px]">
-          <div className="font-semibold text-xs text-[#100E26] truncate">{p.name}</div>
-          <div className="text-[11px] text-[#5A586E] truncate">{p.fabric}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'designNumber',
-      header: 'Design Number',
-      width: '110px',
-      render: (p) => (
-        <span className="inline-block px-2 py-0.5 rounded bg-[#EEF2FF] text-[#4E45D5] border border-[#C7D2FE] text-xs font-semibold font-tabular">
-          {p.designNumber}
-        </span>
-      ),
-    },
-    {
-      key: 'price',
-      header: 'Price',
-      width: '90px',
-      render: (p) => (
-        <span className="font-bold text-xs text-[#100E26] font-tabular">
-          ₹{p.wholesalePrice.toLocaleString('en-IN')}
-        </span>
-      ),
-    },
-    {
-      key: 'stock',
-      header: 'Stock',
-      width: '160px',
-      render: (p) => (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-medium font-tabular text-[#100E26]">
-            {p.stock}
-          </span>
-          <StatusBadge
-            label={p.stock === 0 ? 'Out of Stock' : p.stock <= 10 ? 'Low Stock' : 'In Stock'}
-            variant={p.stock === 0 ? 'red' : p.stock <= 10 ? 'amber' : 'green'}
-            size="sm"
-          />
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      width: '70px',
-      align: 'right',
-      render: (p) => (
-        <button
-          type="button"
-          onClick={() => setProductToRemove(p)}
-          className="p-1.5 rounded-md text-[#5A586E] hover:text-[#E11D48] hover:bg-[#FFF1F2] transition-colors"
-          title="Remove from category"
-          aria-label="Remove from category"
-        >
-          <MinusCircle className="w-4 h-4" />
-        </button>
       ),
     },
   ];
@@ -504,66 +418,13 @@ export default function CategoriesPage() {
         </div>
       </CommonDrawer>
 
-      {/* View Category Drawer (wider) */}
-      <CommonDrawer
-        isOpen={Boolean(viewingCategory)}
+      {/* View Category Drawer (Dedicated CategoryDetailsDrawer) */}
+      <CategoryDetailsDrawer
+        open={Boolean(viewingCategory)}
         onClose={() => setViewingCategory(null)}
-        title="Category View"
-        description="Review attached fabric designs, stock availability, and storefront status."
-        cancelText="Close"
-        width="2xl"
-      >
-        {viewingCategory && (
-          <div className="space-y-6">
-            {/* Top: Category image, name, status badge, Total Products: N */}
-            <div className="flex items-center gap-4 p-4 bg-[#F7F7FB] border border-[#E2E1EC] rounded-xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={viewingCategory.image}
-                alt={viewingCategory.name}
-                className="w-16 h-16 rounded-xl object-cover border border-[#E2E1EC] shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="text-lg font-bold text-[#100E26] truncate">
-                    {viewingCategory.name}
-                  </h3>
-                  <StatusBadge
-                    label={viewingCategory.status === 'active' ? 'Active' : 'Inactive'}
-                    variant={viewingCategory.status === 'active' ? 'green' : 'slate'}
-                    size="sm"
-                  />
-                  <StatusBadge
-                    label={viewingCategory.visibleOnStorefront ? 'Visible' : 'Hidden'}
-                    variant={viewingCategory.visibleOnStorefront ? 'green' : 'slate'}
-                    showDot={false}
-                    size="sm"
-                  />
-                </div>
-                <p className="text-xs text-[#5A586E] mt-1 line-clamp-2">
-                  {viewingCategory.description || viewingCategory.subtitle}
-                </p>
-                <div className="mt-2 text-xs font-semibold text-[#4E45D5] font-tabular">
-                  Total Products: {viewingCategory.totalProducts}
-                </div>
-              </div>
-            </div>
-
-            {/* Below it: CommonTable with columns Product Image, Product Name, Design Number, Price, Stock, Actions (Remove) */}
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#5A586E] mb-2.5">
-                Attached Products in this Category
-              </div>
-              <CommonTable
-                columns={drawerProductColumns}
-                data={baseCategoryList}
-                showSearch={false}
-                pageSize={5}
-              />
-            </div>
-          </div>
-        )}
-      </CommonDrawer>
+        category={viewingCategory}
+        onEdit={(cat) => handleOpenEdit(cat)}
+      />
 
       {/* ConfirmationModal: Delete Category */}
       <ConfirmationModal
@@ -573,18 +434,6 @@ export default function CategoriesPage() {
         title="Delete category?"
         description="Are you sure you want to delete this category? Products within this category will remain in the master catalogue."
         confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
-
-      {/* ConfirmationModal: Remove Product from Category */}
-      <ConfirmationModal
-        isOpen={Boolean(productToRemove)}
-        onClose={() => setProductToRemove(null)}
-        onConfirm={handleConfirmRemoveProduct}
-        title="Remove product from category?"
-        description="This will remove the product from this category only. The product will not be deleted."
-        confirmText="Remove"
         cancelText="Cancel"
         variant="danger"
       />
