@@ -110,7 +110,6 @@ export interface WhatsAppSettings {
 
 export type WhatsAppShareMode = 'catalogue' | 'product';
 
-
 export interface Category {
   id: string;
   name: string;
@@ -122,6 +121,25 @@ export interface Category {
   description?: string;
 }
 
+export type StockUnit = 'Piece' | 'Meter' | 'Roll' | 'Bale' | 'Kg';
+export type WeightUnit = 'Gram' | 'Kg';
+export type TaxRate = '0%' | '5%' | '12%' | '18%' | '28%';
+export type TaxType = 'GST Inclusive' | 'GST Exclusive';
+
+export interface QuantityPriceRange {
+  id?: string;
+  min: number;
+  max?: number | null; // null or undefined means "and above"
+  price: number;
+}
+
+export interface ProductVideo {
+  type: 'youtube' | 'upload';
+  url?: string;
+  fileName?: string;
+  fileSize?: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -129,6 +147,7 @@ export interface Product {
   image: string;
   images: string[];
   designNumber: string;
+  sku?: string;
   category: string;
   fabric: string;
   wholesalePrice: number;
@@ -136,7 +155,17 @@ export interface Product {
   stock: number;
   moq: number;
   unit?: string;
+  stockUnit?: StockUnit;
   weight?: string;
+  productWeight?: number;
+  weightUnit?: WeightUnit;
+  color?: string;
+  colorHex?: string;
+  tax?: TaxRate;
+  taxType?: TaxType;
+  video?: ProductVideo;
+  pricingRanges?: QuantityPriceRange[];
+  pricingUnit?: StockUnit;
   status: 'active' | 'inactive';
   description?: string;
 }

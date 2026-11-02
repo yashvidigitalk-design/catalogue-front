@@ -118,7 +118,7 @@ export default function ProfileDropdown() {
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleLogoutConfirm}
         title="Confirm Session Logout"
-        description="Are you sure you want to end your current session for Rajesh Varma Textiles? Unsaved form drafts will not be retained."
+        description="Are you sure you want to end your current session?"
         confirmText="Log Out"
         cancelText="Stay Logged In"
         variant="danger"
