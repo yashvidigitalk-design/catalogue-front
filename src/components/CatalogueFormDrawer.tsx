@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, X, Package } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import ProductSelectionDrawer from '@/components/ProductSelectionDrawer';
@@ -95,7 +95,6 @@ export default function CatalogueFormDrawer({
         }
         onSave={handleSave}
         saveText="Save Catalogue"
-        cancelText="Cancel"
         width="xl"
       >
         <div className="space-y-5">
@@ -268,4 +267,3 @@ export default function CatalogueFormDrawer({
     </>
   );
 }
-
