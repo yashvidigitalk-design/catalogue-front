@@ -9,9 +9,7 @@ import {
   Trash2,
   Image as ImageIcon,
   AlertCircle,
-  Sparkles,
   Info,
-  Check,
 } from 'lucide-react';
 import {
   Product,
@@ -25,6 +23,7 @@ import {
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
 import { useToast } from '@/hooks/useToast';
 import CommonDrawer from '@/components/CommonDrawer';
+import { InputField, SearchableSelect, TextareaField } from '@/components/FormControls';
 
 interface ProductFormProps {
   initialProduct?: Product | null;
@@ -660,27 +659,16 @@ export default function ProductForm({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="h-10 rounded-lg border border-[#E2E1EC] bg-white flex items-center focus-within:border-[#4E45D5] focus-within:ring-1 focus-within:ring-[#4E45D5] transition-all overflow-hidden">
-                    <span className="pl-3 pr-2 flex items-center shrink-0">
-                      <YouTubeIcon className="w-4 h-4 text-[#E11D48]" />
-                    </span>
-                    <input
-                      type="text"
-                      value={videoYoutubeUrl}
-                      onChange={(e) => {
-                        setVideoYoutubeUrl(e.target.value);
-                        if (errors.video) setErrors((prev) => ({ ...prev, video: '' }));
-                      }}
-                      placeholder="e.g. https://www.youtube.com/watch?v=..."
-                      className="w-full h-full pr-3 bg-transparent border-0 outline-none text-xs text-[#100E26] placeholder-[#9493A8]"
-                    />
-                  </div>
-                  {errors.video && (
-                    <p className="text-xs text-[#E11D48] flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{errors.video}</span>
-                    </p>
-                  )}
+                  <InputField
+                    prefixIcon={<YouTubeIcon className="w-4 h-4 text-[#E11D48]" />}
+                    value={videoYoutubeUrl}
+                    onChange={(e) => {
+                      setVideoYoutubeUrl(e.target.value);
+                      if (errors.video) setErrors((prev) => ({ ...prev, video: '' }));
+                    }}
+                    placeholder="e.g. https://www.youtube.com/watch?v=..."
+                    error={errors.video}
+                  />
 
                   {getYouTubeVideoId(videoYoutubeUrl) && (
                     <div className="relative aspect-video rounded-lg overflow-hidden border border-[#E2E1EC] bg-black mt-2">
@@ -722,132 +710,76 @@ export default function ProductForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Product Name */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Product Name <span className="text-[#E11D48]">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
-                  }}
-                  placeholder="e.g. Banarasi Katan Silk Floral Jaal"
-                  className={`input-base ${
-                    errors.name ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                  }`}
-                />
-                {errors.name && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.name}</p>
-                )}
-              </div>
+              <InputField
+                label="Product Name"
+                required
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+                }}
+                placeholder="e.g. Banarasi Katan Silk Floral Jaal"
+                error={errors.name}
+                containerClassName="sm:col-span-2"
+              />
 
               {/* Design Number */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Design Number <span className="text-[#E11D48]">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={designNumber}
-                  onChange={(e) => {
-                    setDesignNumber(e.target.value);
-                    if (errors.designNumber) {
-                      setErrors((prev) => ({ ...prev, designNumber: '' }));
-                    }
-                  }}
-                  placeholder="e.g. BN-1002"
-                  className={`input-base ${
-                    errors.designNumber
-                      ? 'border-[#E11D48] focus:border-[#E11D48]'
-                      : ''
-                  }`}
-                />
-                {errors.designNumber && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.designNumber}</p>
-                )}
-              </div>
+              <InputField
+                label="Design Number"
+                required
+                value={designNumber}
+                onChange={(e) => {
+                  setDesignNumber(e.target.value);
+                  if (errors.designNumber) {
+                    setErrors((prev) => ({ ...prev, designNumber: '' }));
+                  }
+                }}
+                placeholder="e.g. BN-1002"
+                error={errors.designNumber}
+              />
 
               {/* SKU */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                    SKU <span className="text-[#E11D48]">*</span>
-                  </label>
-                </div>
-                <input
-                  type="text"
-                  value={sku}
-                  onChange={(e) => {
-                    setSku(e.target.value);
-                    if (errors.sku) setErrors((prev) => ({ ...prev, sku: '' }));
-                  }}
-                  placeholder="e.g. TEX-BN1002-SILK"
-                  className={`input-base ${
-                    errors.sku ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                  }`}
-                />
-                {errors.sku && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.sku}</p>
-                )}
-              </div>
+              <InputField
+                label="SKU"
+                required
+                value={sku}
+                onChange={(e) => {
+                  setSku(e.target.value);
+                  if (errors.sku) setErrors((prev) => ({ ...prev, sku: '' }));
+                }}
+                placeholder="e.g. TEX-BN1002-SILK"
+                error={errors.sku}
+              />
 
-              {/* Category */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Category <span className="text-[#E11D48]">*</span>
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    if (errors.category) setErrors((prev) => ({ ...prev, category: '' }));
-                  }}
-                  className={`input-base bg-white ${
-                    errors.category ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                  }`}
-                >
-                  {INITIAL_CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.category}</p>
-                )}
-              </div>
+              {/* Category (Searchable Dropdown) */}
+              <SearchableSelect
+                label="Category"
+                required
+                value={category}
+                onChange={(val) => {
+                  setCategory(val);
+                  if (errors.category) setErrors((prev) => ({ ...prev, category: '' }));
+                }}
+                options={INITIAL_CATEGORIES.map((cat) => ({
+                  label: cat.name,
+                  value: cat.name,
+                }))}
+                placeholder="Select Category"
+                error={errors.category}
+              />
 
               {/* Fabric Type */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Fabric Blend / Base
-                </label>
-                <input
-                  type="text"
-                  value={fabric}
-                  onChange={(e) => setFabric(e.target.value)}
-                  placeholder="e.g. Pure Katan Silk / Organza"
-                  className="input-base"
-                />
-              </div>
+              <InputField
+                label="Fabric Blend / Base"
+                value={fabric}
+                onChange={(e) => setFabric(e.target.value)}
+                placeholder="e.g. Pure Katan Silk / Organza"
+              />
 
               {/* Product Description */}
               <div className="sm:col-span-2">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                    Product Description
-                  </label>
-                  <span
-                    className={`text-[11px] font-tabular font-medium ${
-                      description.length > 200 ? 'text-[#E11D48]' : 'text-[#5A586E]'
-                    }`}
-                  >
-                    {description.length}/200 characters
-                  </span>
-                </div>
-                <textarea
+                <TextareaField
+                  label="Product Description"
                   value={description}
                   onChange={(e) => {
                     if (e.target.value.length <= 200) {
@@ -857,7 +789,8 @@ export default function ProductForm({
                   maxLength={200}
                   rows={3}
                   placeholder="Describe warp-weft construction, weave texture, zari craftsmanship, and garment suitability..."
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E2E1EC] bg-white text-xs text-[#100E26] placeholder-[#9493A8] focus:border-[#4E45D5] focus:outline-none focus:ring-1 focus:ring-[#4E45D5] transition-colors resize-none"
+                  className="resize-none"
+                  helperText={`${description.length}/200 characters`}
                 />
               </div>
             </div>
@@ -876,89 +809,59 @@ export default function ProductForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Stock Quantity (Starts empty, placeholder e.g. 500) */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Stock Quantity <span className="text-[#E11D48]">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    value={stock}
-                    onChange={(e) => {
-                      setStock(e.target.value);
-                      if (errors.stock) setErrors((prev) => ({ ...prev, stock: '' }));
-                    }}
-                    placeholder="e.g. 500"
-                    className={`input-base font-tabular ${
-                      errors.stock ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                    }`}
-                  />
-                </div>
-                {errors.stock && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.stock}</p>
-                )}
-              </div>
+              <InputField
+                label="Stock Quantity"
+                required
+                type="number"
+                min="0"
+                value={stock}
+                onChange={(e) => {
+                  setStock(e.target.value);
+                  if (errors.stock) setErrors((prev) => ({ ...prev, stock: '' }));
+                }}
+                placeholder="e.g. 500"
+                className="font-tabular"
+                error={errors.stock}
+              />
 
-              {/* Stock Unit (Starts with "Select Unit") */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Stock Unit <span className="text-[#E11D48]">*</span>
-                </label>
-                <select
-                  value={stockUnit}
-                  onChange={(e) => {
-                    const val = e.target.value as StockUnit;
-                    setStockUnit(val);
-                    if (errors.stockUnit) {
-                      setErrors((prev) => ({ ...prev, stockUnit: '' }));
-                    }
-                  }}
-                  className={`input-base bg-white ${
-                    errors.stockUnit ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                  }`}
-                >
-                  <option value="">Select Unit</option>
-                  {STOCK_UNITS.map((unit) => (
-                    <option key={unit} value={unit}>
-                      {unit}
-                    </option>
-                  ))}
-                </select>
-                {errors.stockUnit && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.stockUnit}</p>
-                )}
-              </div>
+              {/* Stock Unit (Searchable Dropdown) */}
+              <SearchableSelect
+                label="Stock Unit"
+                required
+                value={stockUnit}
+                onChange={(val) => {
+                  setStockUnit(val as StockUnit);
+                  if (errors.stockUnit) {
+                    setErrors((prev) => ({ ...prev, stockUnit: '' }));
+                  }
+                }}
+                options={STOCK_UNITS.map((u) => ({ label: u, value: u }))}
+                placeholder="Select Unit"
+                error={errors.stockUnit}
+              />
 
               {/* MOQ with Stock Unit Suffix (Starts empty, placeholder e.g. 50) */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  MOQ (Min. Order) <span className="text-[#E11D48]">*</span>
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="number"
-                    min="1"
-                    value={moq}
-                    onChange={(e) => {
-                      setMoq(e.target.value);
-                      if (errors.moq) setErrors((prev) => ({ ...prev, moq: '' }));
-                    }}
-                    placeholder="e.g. 50"
-                    className={`input-base font-tabular ${stockUnit ? 'pr-20' : ''} ${
-                      errors.moq ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-                    }`}
-                  />
-                  {stockUnit && (
-                    <div className="absolute right-3 text-xs font-semibold text-[#5A586E] pointer-events-none">
+              <InputField
+                label="MOQ (Min. Order)"
+                required
+                type="number"
+                min="1"
+                value={moq}
+                onChange={(e) => {
+                  setMoq(e.target.value);
+                  if (errors.moq) setErrors((prev) => ({ ...prev, moq: '' }));
+                }}
+                placeholder="e.g. 50"
+                className="font-tabular"
+                suffix={
+                  stockUnit ? (
+                    <span className="text-xs font-semibold text-[#5A586E] pointer-events-none">
                       {stockUnit}s
-                    </div>
-                  )}
-                </div>
-                {errors.moq && (
-                  <p className="text-xs text-[#E11D48] mt-1">{errors.moq}</p>
-                )}
-              </div>
+                    </span>
+                  ) : undefined
+                }
+                error={errors.moq}
+              />
             </div>
           </div>
 
@@ -980,13 +883,14 @@ export default function ProductForm({
                   Product Weight
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
+                  <InputField
                     type="number"
                     min="0"
                     value={productWeight}
                     onChange={(e) => setProductWeight(e.target.value)}
                     placeholder="e.g. 140"
-                    className="input-base font-tabular flex-1"
+                    className="font-tabular"
+                    containerClassName="flex-1"
                   />
                   <select
                     value={weightUnit}
@@ -1003,15 +907,13 @@ export default function ProductForm({
               </div>
 
               {/* Product Color (Name + Picker Dot) */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Product Color
-                </label>
-                <div className="h-10 rounded-lg border border-[#E2E1EC] bg-white flex items-center focus-within:border-[#4E45D5] focus-within:ring-1 focus-within:ring-[#4E45D5] transition-all overflow-hidden">
-                  <div className="pl-3 pr-2 flex items-center shrink-0">
+              <InputField
+                label="Product Color"
+                prefixIcon={
+                  <>
                     <label
                       htmlFor="color-picker-input"
-                      className="w-5 h-5 rounded-full border border-[#CBC9D9] cursor-pointer shadow-xs shrink-0 block hover:scale-105 transition-transform"
+                      className="w-4 h-4 rounded-full border border-[#CBC9D9] cursor-pointer shadow-xs shrink-0 block hover:scale-105 transition-transform"
                       style={{ backgroundColor: colorHex }}
                       title="Click to pick color swatch"
                     />
@@ -1022,16 +924,12 @@ export default function ProductForm({
                       onChange={(e) => setColorHex(e.target.value)}
                       className="sr-only"
                     />
-                  </div>
-                  <input
-                    type="text"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    placeholder="e.g. Crimson Red / Rani Pink"
-                    className="w-full h-full pr-3 bg-transparent border-0 outline-none text-xs text-[#100E26] placeholder-[#9493A8]"
-                  />
-                </div>
-              </div>
+                  </>
+                }
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="e.g. Crimson Red / Rani Pink"
+              />
             </div>
           </div>
 
@@ -1047,24 +945,14 @@ export default function ProductForm({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Tax Dropdown (Starts with "Select Tax Rate") */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Tax Rate (GST)
-                </label>
-                <select
-                  value={tax}
-                  onChange={(e) => setTax(e.target.value as TaxRate)}
-                  className="input-base bg-white font-tabular"
-                >
-                  <option value="">Select Tax Rate</option>
-                  {TAX_RATES.map((rate) => (
-                    <option key={rate} value={rate}>
-                      {rate}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Tax Dropdown (Searchable Dropdown) */}
+              <SearchableSelect
+                label="Tax Rate (GST)"
+                value={tax}
+                onChange={(val) => setTax(val as TaxRate)}
+                options={TAX_RATES.map((rate) => ({ label: rate, value: rate }))}
+                placeholder="Select Tax Rate"
+              />
 
               {/* Tax Type Segmented Control */}
               <div>
@@ -1154,7 +1042,7 @@ export default function ProductForm({
                         <span className="sm:hidden text-[10px] font-bold text-[#5A586E] uppercase block mb-1">
                           Min Quantity *
                         </span>
-                        <input
+                        <InputField
                           type="number"
                           min="1"
                           value={range.min}
@@ -1162,7 +1050,7 @@ export default function ProductForm({
                             handleRangeChange(range.id, 'min', e.target.value)
                           }
                           placeholder="e.g. 1"
-                          className="input-base font-tabular bg-white"
+                          className="font-tabular bg-white"
                         />
                       </div>
 
@@ -1171,7 +1059,7 @@ export default function ProductForm({
                         <span className="sm:hidden text-[10px] font-bold text-[#5A586E] uppercase block mb-1">
                           Max Quantity {isLast && '(Empty for "+ and above")'}
                         </span>
-                        <input
+                        <InputField
                           type="number"
                           min="1"
                           value={range.max}
@@ -1179,7 +1067,7 @@ export default function ProductForm({
                             handleRangeChange(range.id, 'max', e.target.value)
                           }
                           placeholder={isLast ? 'and above...' : 'e.g. 100'}
-                          className="input-base font-tabular bg-white"
+                          className="font-tabular bg-white"
                         />
                       </div>
 
@@ -1188,25 +1076,23 @@ export default function ProductForm({
                         <span className="sm:hidden text-[10px] font-bold text-[#5A586E] uppercase block mb-1">
                           Price per {pricingUnit || 'Unit'} *
                         </span>
-                        <div
-                          className={`h-10 rounded-lg border bg-white flex items-center focus-within:border-[#4E45D5] focus-within:ring-1 focus-within:ring-[#4E45D5] transition-all overflow-hidden ${
-                            err ? 'border-[#E11D48]' : 'border-[#E2E1EC]'
+                        <InputField
+                          type="number"
+                          min="1"
+                          prefixIcon={
+                            <span className="text-xs font-semibold text-[#5A586E] select-none">
+                              &#8377;
+                            </span>
+                          }
+                          value={range.price}
+                          onChange={(e) =>
+                            handleRangeChange(range.id, 'price', e.target.value)
+                          }
+                          placeholder="0"
+                          className={`!pl-7 font-tabular bg-white ${
+                            err ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
                           }`}
-                        >
-                          <span className="pl-3 pr-1.5 text-xs font-semibold text-[#5A586E] select-none shrink-0">
-                            &#8377;
-                          </span>
-                          <input
-                            type="number"
-                            min="1"
-                            value={range.price}
-                            onChange={(e) =>
-                              handleRangeChange(range.id, 'price', e.target.value)
-                            }
-                            placeholder="0"
-                            className="w-full h-full pr-3 bg-transparent border-0 outline-none text-xs text-[#100E26] font-tabular placeholder-[#9493A8]"
-                          />
-                        </div>
+                        />
                       </div>
 
                       {/* Remove Button */}

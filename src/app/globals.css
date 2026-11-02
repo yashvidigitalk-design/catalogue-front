@@ -76,94 +76,96 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Standardized Button and Input Heights (40px) */
-.btn-primary {
-  height: 40px;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  background-color: #4E45D5;
-  color: #FFFFFF;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.15s ease-in-out;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.btn-primary:hover {
-  background-color: #6860EF;
-}
-.btn-primary:focus-visible {
-  outline: 2px solid #4E45D5;
-  outline-offset: 2px;
-}
+@layer components {
+  /* Standardized Button and Input Heights (40px) */
+  .btn-primary {
+    height: 40px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background-color: #4E45D5;
+    color: #FFFFFF;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary:hover {
+    background-color: #6860EF;
+  }
+  .btn-primary:focus-visible {
+    outline: 2px solid #4E45D5;
+    outline-offset: 2px;
+  }
 
-.btn-secondary {
-  height: 40px;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  background-color: #FFFFFF;
-  color: #100E26;
-  border: 1px solid #E2E1EC;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.15s ease-in-out;
-  cursor: pointer;
-}
-.btn-secondary:hover {
-  background-color: #F7F7FB;
-  border-color: #CBC9D9;
-}
+  .btn-secondary {
+    height: 40px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background-color: #FFFFFF;
+    color: #100E26;
+    border: 1px solid #E2E1EC;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+  }
+  .btn-secondary:hover {
+    background-color: #F7F7FB;
+    border-color: #CBC9D9;
+  }
 
-.btn-danger {
-  height: 40px;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  background-color: #E11D48;
-  color: #FFFFFF;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.15s ease-in-out;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.btn-danger:hover {
-  background-color: #BE123C;
-}
+  .btn-danger {
+    height: 40px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background-color: #E11D48;
+    color: #FFFFFF;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-danger:hover {
+    background-color: #BE123C;
+  }
 
-.input-base {
-  height: 40px;
-  padding-left: 0.875rem;
-  padding-right: 0.875rem;
-  background-color: #FFFFFF;
-  border: 1px solid #E2E1EC;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #100E26;
-  outline: none;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  width: 100%;
-}
-.input-base:focus {
-  border-color: #4E45D5;
-  box-shadow: 0 0 0 3px rgba(78, 69, 213, 0.12);
-}
-.input-base::placeholder {
-  color: #9493A8;
+  .input-base {
+    height: 40px;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E1EC;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #100E26;
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    width: 100%;
+  }
+  .input-base:focus {
+    border-color: #4E45D5;
+    box-shadow: 0 0 0 3px rgba(78, 69, 213, 0.12);
+  }
+  .input-base::placeholder {
+    color: #9493A8;
+  }
 }
 
 /* Custom Scrollbars */

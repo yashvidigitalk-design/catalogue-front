@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { AlertTriangle, AlertCircle, CheckCircle, X, HelpCircle } from 'lucide-react';
+import { TextareaField } from '@/components/FormControls';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -132,10 +133,9 @@ export default function ConfirmationModal({
 
             {showRemark && (
               <div className="mt-4">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  {remarkLabel} {remarkRequired && <span className="text-[#E11D48]">*</span>}
-                </label>
-                <textarea
+                <TextareaField
+                  label={remarkLabel}
+                  required={remarkRequired}
                   value={remark}
                   onChange={(e) => {
                     setRemark(e.target.value);
@@ -143,11 +143,9 @@ export default function ConfirmationModal({
                   }}
                   placeholder={remarkPlaceholder}
                   rows={3}
-                  className={`w-full p-2.5 text-sm bg-white border ${
-                    error ? 'border-[#E11D48]' : 'border-[#E2E1EC]'
-                  } rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none`}
+                  error={error}
+                  className="resize-none text-sm"
                 />
-                {error && <p className="text-xs text-[#E11D48] mt-1">{error}</p>}
               </div>
             )}
 

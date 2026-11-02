@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Package, Globe, EyeOff, Edit2, Layers, CheckCircle2 } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import CommonTable from '@/components/CommonTable';
@@ -34,17 +34,8 @@ export default function CategoryDetailsDrawer({
     return INITIAL_PRODUCTS.slice(0, 6);
   }, [category]);
 
-  // Filtered by search inside the drawer
-  const filteredProducts = useMemo(() => {
-    if (!productSearch.trim()) return categoryProducts;
-    const q = productSearch.toLowerCase();
-    return categoryProducts.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.designNumber.toLowerCase().includes(q) ||
-        p.fabric.toLowerCase().includes(q)
-    );
-  }, [categoryProducts, productSearch]);
+  // Filtered by search inside the drawer (backend handles search; frontend does not filter)
+  const filteredProducts = categoryProducts;
 
   if (!category) return null;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import TemplateCard from '@/components/TemplateCard';
 import TemplatePreview from '@/components/TemplatePreview';
@@ -12,6 +12,7 @@ import {
 import { CatalogueTemplate, TemplateCustomization } from '@/types';
 import { triggerToast } from '@/hooks/useToast';
 import { Check } from 'lucide-react';
+import { InputField, TextareaField } from '@/components/FormControls';
 
 export default function CatalogueTemplatesPage() {
   const [templates, setTemplates] = useState<CatalogueTemplate[]>(DEFAULT_TEMPLATES);
@@ -163,20 +164,14 @@ export default function CatalogueTemplatesPage() {
             </div>
 
             {/* Template Title */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Template Title
-              </label>
-              <input
-                type="text"
-                value={customForm.title}
-                onChange={(e) =>
-                  setCustomForm({ ...customForm, title: e.target.value })
-                }
-                className="input-base"
-                placeholder="e.g. Summer Fabric Volume Catalogue"
-              />
-            </div>
+            <InputField
+              label="Template Title"
+              value={customForm.title}
+              onChange={(e) =>
+                setCustomForm({ ...customForm, title: e.target.value })
+              }
+              placeholder="e.g. Summer Fabric Volume Catalogue"
+            />
 
             {/* Brand Color (5 Swatches) */}
             <div className="space-y-2">
@@ -301,17 +296,15 @@ export default function CatalogueTemplatesPage() {
             </div>
 
             {/* Footer Note */}
-            <div className="space-y-1.5 pt-2 border-t border-[#E2E1EC]">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Catalogue Terms & Footer Note
-              </label>
-              <textarea
+            <div className="pt-2 border-t border-[#E2E1EC]">
+              <TextareaField
+                label="Catalogue Terms & Footer Note"
                 rows={3}
                 value={customForm.footerNote}
                 onChange={(e) =>
                   setCustomForm({ ...customForm, footerNote: e.target.value })
                 }
-                className="w-full p-2.5 text-xs bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none"
+                className="resize-none"
                 placeholder="e.g. All rates are ex-mill Surat. 5% GST applicable."
               />
             </div>

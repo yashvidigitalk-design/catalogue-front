@@ -18,6 +18,20 @@ interface CommonDrawerProps {
   zIndex?: string;
 }
 
+// Global LIFO stack of open drawers (attached to window to survive HMR/Fast Refresh)
+interface DrawerStackEntry {
+  id: string;
+}
+
+const getDrawerStack = (): DrawerStackEntry[] => {
+  if (typeof window === 'undefined') return [];
+  const win = window as unknown as { __COMMON_DRAWER_STACK__?: DrawerStackEntry[] };
+  if (!win.__COMMON_DRAWER_STACK__) {
+    win.__COMMON_DRAWER_STACK__ = [];
+  }
+  return win.__COMMON_DRAWER_STACK__;
+};
+
 export default function CommonDrawer({
   isOpen,
   onClose,
@@ -32,21 +46,50 @@ export default function CommonDrawer({
   width = 'lg',
   zIndex = 'z-50',
 }: CommonDrawerProps) {
+  const drawerId = React.useId();
+  const onCloseRef = React.useRef(onClose);
+
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const stack = getDrawerStack();
+    const existingIdx = stack.findIndex((d) => d.id === drawerId);
+    if (existingIdx === -1) {
+      stack.push({ id: drawerId });
+    }
+
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape') {
+        const currentStack = getDrawerStack();
+        const topDrawer = currentStack[currentStack.length - 1];
+        if (topDrawer && topDrawer.id === drawerId) {
+          e.preventDefault();
+          e.stopPropagation();
+          onCloseRef.current();
+        }
       }
     };
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
-      document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
+      const currentStack = getDrawerStack();
+      const idx = currentStack.findIndex((d) => d.id === drawerId);
+      if (idx !== -1) {
+        currentStack.splice(idx, 1);
+      }
+      if (currentStack.length === 0) {
+        document.body.style.overflow = 'unset';
+      }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, drawerId]);
 
   if (!isOpen) return null;
 

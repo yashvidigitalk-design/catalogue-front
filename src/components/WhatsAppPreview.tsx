@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ArrowLeft, MoreVertical, Phone, Video, CheckCheck, Smile, Send, Mic, ExternalLink, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, MoreVertical, Phone, Video, CheckCheck, Smile, Mic, ExternalLink } from 'lucide-react';
 import { formatWhatsAppMessage } from '@/lib/settingsData';
 
 interface WhatsAppPreviewProps {
@@ -13,7 +13,6 @@ interface WhatsAppPreviewProps {
 export default function WhatsAppPreview({
   messageTemplate,
   storefrontUrl,
-  businessNumber = '98765 43210',
 }: WhatsAppPreviewProps) {
   const [shareMode, setShareMode] = useState<'catalogue' | 'product'>('catalogue');
 

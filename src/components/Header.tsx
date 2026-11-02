@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, ChevronRight, Sparkles, Building2 } from 'lucide-react';
@@ -11,7 +11,6 @@ import { CURRENT_SELLER } from '@/lib/sampleData';
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
-  onToggleCollapseDesktop?: () => void;
 }
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -28,7 +27,6 @@ const ROUTE_LABELS: Record<string, string> = {
 
 export default function Header({
   onToggleMobileSidebar,
-  onToggleCollapseDesktop,
 }: HeaderProps) {
   const pathname = usePathname();
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);

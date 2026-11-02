@@ -68,6 +68,7 @@ export default function CommonTable<T>({
       if (externalPageChange) externalPageChange(page);
     } else {
       setInternalPage(page);
+      if (externalPageChange) externalPageChange(page);
     }
   };
 

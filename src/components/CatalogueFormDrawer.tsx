@@ -7,6 +7,7 @@ import ProductSelectionDrawer from '@/components/ProductSelectionDrawer';
 import { Catalogue, Product } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { useToast } from '@/hooks/useToast';
+import { InputField, TextareaField } from '@/components/FormControls';
 
 interface CatalogueFormDrawerProps {
   open: boolean;
@@ -99,38 +100,26 @@ export default function CatalogueFormDrawer({
       >
         <div className="space-y-5">
           {/* Catalogue Name (required) */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-              Catalogue Name <span className="text-[#E11D48]">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
-              }}
-              placeholder="e.g. Festive Bridal Brocades 2026"
-              className={`input-base ${errors.name ? 'border-[#E11D48] focus:border-[#E11D48]' : ''}`}
-            />
-            {errors.name && (
-              <p className="text-xs text-[#E11D48] mt-1">{errors.name}</p>
-            )}
-          </div>
+          <InputField
+            label="Catalogue Name"
+            required
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+            }}
+            placeholder="e.g. Festive Bridal Brocades 2026"
+            error={errors.name}
+          />
 
           {/* Description (textarea) */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide context on fabric weave, count, GSM, and target garments for this lookbook..."
-              className="w-full p-3 text-sm bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none"
-            />
-          </div>
+          <TextareaField
+            label="Description"
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Provide context on fabric weave, count, GSM, and target garments for this lookbook..."
+          />
 
           {/* Status (Active / Inactive) */}
           <div>

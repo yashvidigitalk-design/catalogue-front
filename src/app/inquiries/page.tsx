@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Eye } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CommonTable from '@/components/CommonTable';
@@ -16,22 +16,8 @@ export default function InquiriesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewingInquiry, setViewingInquiry] = useState<Inquiry | null>(null);
 
-  // Search by Buyer Name, Product Name or Inquiry ID & Filter by Status
-  const q = searchTerm.toLowerCase();
-  const filteredInquiries = inquiriesList.filter((inq) => {
-    const matchesSearch =
-      searchTerm === '' ||
-      inq.buyerName.toLowerCase().includes(q) ||
-      inq.productName.toLowerCase().includes(q) ||
-      inq.id.toLowerCase().includes(q) ||
-      inq.buyerCompany.toLowerCase().includes(q) ||
-      inq.designNumber.toLowerCase().includes(q);
-
-    const matchesStatus =
-      statusFilter === 'all' || inq.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Inquiries Table Data (backend handles search & filter; frontend does not filter)
+  const filteredInquiries = inquiriesList;
 
   const handleOpenView = (inq: Inquiry) => {
     setViewingInquiry(inq);

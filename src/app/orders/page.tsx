@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Eye, Check, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CommonTable from '@/components/CommonTable';
@@ -23,18 +23,8 @@ export default function OrdersPage() {
   const [actionType, setActionType] = useState<'accept' | 'reject'>('accept');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Search by Order ID, Buyer Name or Product Name (no other filters)
-  const q = searchTerm.toLowerCase();
-  const filteredOrders = ordersList.filter((ord) => {
-    if (!searchTerm) return true;
-    return (
-      ord.id.toLowerCase().includes(q) ||
-      ord.buyerName.toLowerCase().includes(q) ||
-      ord.buyerCompany.toLowerCase().includes(q) ||
-      ord.productName.toLowerCase().includes(q) ||
-      ord.designNumber.toLowerCase().includes(q)
-    );
-  });
+  // Orders Table Data (backend handles search & filter; frontend does not filter)
+  const filteredOrders = ordersList;
 
   const handleOpenAccept = (ord: Order) => {
     setTargetOrder(ord);

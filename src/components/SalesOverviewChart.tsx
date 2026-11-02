@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { SALES_TIMEFRAME_DATA } from '@/lib/dashboardData';
 import { SalesTimeframe } from '@/types';
 

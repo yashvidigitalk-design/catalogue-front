@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -41,11 +41,6 @@ export default function ProductsPage() {
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  // Open Drawer for Add
-  const handleOpenAdd = () => {
-    setEditingProduct(null);
-    setIsAddEditOpen(true);
-  };
 
   // Open Drawer for Edit
   const handleOpenEdit = (prod: Product) => {
@@ -76,22 +71,8 @@ export default function ProductsPage() {
     })),
   ];
 
-  // Filtered Products (Category and Stock are not filtered from frontend)
-  const q = searchTerm.toLowerCase();
-  const filteredProducts = INITIAL_PRODUCTS.filter((p) => {
-    // Search: Product Name or Design Number
-    const matchesSearch =
-      searchTerm === '' ||
-      p.name.toLowerCase().includes(q) ||
-      p.designNumber.toLowerCase().includes(q) ||
-      p.subtitle.toLowerCase().includes(q);
-
-    // Status filter
-    const matchesStatus =
-      statusFilter === 'all' || p.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Products Table Data (backend handles search & filter; frontend does not filter)
+  const filteredProducts = INITIAL_PRODUCTS;
 
   // CommonTable Columns (11 Columns, compact, fits 1366px screen, Actions sticky right)
   const productColumns: TableColumn<Product>[] = [

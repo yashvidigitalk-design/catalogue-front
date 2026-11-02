@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Eye, Edit2, Trash2, Calendar, Clock, Package } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CommonTable from '@/components/CommonTable';
@@ -13,6 +13,26 @@ import { INITIAL_CATALOGUES } from '@/lib/catalogueData';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { useToast } from '@/hooks/useToast';
 
+const ACTION_BTN_CLASS =
+  'p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors';
+
+const renderStatusBadge = (status: 'active' | 'inactive') => (
+  <StatusBadge
+    label={status === 'active' ? 'Active' : 'Inactive'}
+    variant={status === 'active' ? 'green' : 'slate'}
+    size="sm"
+  />
+);
+
+const formatProductsCount = (count: number) =>
+  `${count} ${count === 1 ? 'Product' : 'Products'}`;
+
+const renderDateCell = (date: string) => (
+  <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">
+    {date}
+  </span>
+);
+
 export default function CataloguePage() {
   const { showToast } = useToast();
 
@@ -23,11 +43,8 @@ export default function CataloguePage() {
   const [isCreateEditOpen, setIsCreateEditOpen] = useState(false);
   const [catalogueToDelete, setCatalogueToDelete] = useState<Catalogue | null>(null);
 
-  // Search by catalogue name only (no filters)
-  const q = searchTerm.toLowerCase();
-  const filteredCatalogues = INITIAL_CATALOGUES.filter((c) =>
-    searchTerm === '' ? true : c.name.toLowerCase().includes(q)
-  );
+  // Catalogue table data (search and filter will be handled by backend; frontend does not filter)
+  const filteredCatalogues = INITIAL_CATALOGUES;
 
   const handleOpenCreate = () => {
     setEditingCatalogue(null);
@@ -71,7 +88,7 @@ export default function CataloguePage() {
       width: '130px',
       render: (c) => (
         <span className="font-semibold text-xs text-[#100E26] font-tabular">
-          {c.totalProducts} {c.totalProducts === 1 ? 'Product' : 'Products'}
+          {formatProductsCount(c.totalProducts)}
         </span>
       ),
     },
@@ -79,33 +96,19 @@ export default function CataloguePage() {
       key: 'createdDate',
       header: 'Created Date',
       width: '120px',
-      render: (c) => (
-        <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">
-          {c.createdDate}
-        </span>
-      ),
+      render: (c) => renderDateCell(c.createdDate),
     },
     {
       key: 'lastUpdated',
       header: 'Last Updated',
       width: '120px',
-      render: (c) => (
-        <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">
-          {c.lastUpdated}
-        </span>
-      ),
+      render: (c) => renderDateCell(c.lastUpdated),
     },
     {
       key: 'status',
       header: 'Status',
       width: '100px',
-      render: (c) => (
-        <StatusBadge
-          label={c.status === 'active' ? 'Active' : 'Inactive'}
-          variant={c.status === 'active' ? 'green' : 'slate'}
-          size="sm"
-        />
-      ),
+      render: (c) => renderStatusBadge(c.status),
     },
     {
       key: 'actions',
@@ -118,7 +121,7 @@ export default function CataloguePage() {
           <button
             type="button"
             onClick={() => setViewingCatalogue(c)}
-            className="p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
+            className={ACTION_BTN_CLASS}
             title="View Catalogue"
             aria-label="View Catalogue"
           >
@@ -127,7 +130,7 @@ export default function CataloguePage() {
           <button
             type="button"
             onClick={() => handleOpenEdit(c)}
-            className="p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
+            className={ACTION_BTN_CLASS}
             title="Edit Catalogue"
             aria-label="Edit Catalogue"
           >
@@ -147,17 +150,9 @@ export default function CataloguePage() {
     },
   ];
 
-  // Products belonging to the viewed catalogue
-  const vq = viewDrawerSearch.toLowerCase();
+  // Products belonging to the viewed catalogue (search will be handled by backend; frontend does not filter)
   const viewedProducts = viewingCatalogue
-    ? INITIAL_PRODUCTS.filter((p) => viewingCatalogue.productIds.includes(p.id)).filter((p) => {
-        if (!viewDrawerSearch) return true;
-        return (
-          p.name.toLowerCase().includes(vq) ||
-          p.designNumber.toLowerCase().includes(vq) ||
-          p.category.toLowerCase().includes(vq)
-        );
-      })
+    ? INITIAL_PRODUCTS.filter((p) => viewingCatalogue.productIds.includes(p.id))
     : [];
 
   // Products Table Columns in View Catalogue Drawer
@@ -275,19 +270,12 @@ export default function CataloguePage() {
                   <h3 className="text-lg font-bold text-[#100E26]">
                     {viewingCatalogue.name}
                   </h3>
-                  <StatusBadge
-                    label={viewingCatalogue.status === 'active' ? 'Active' : 'Inactive'}
-                    variant={viewingCatalogue.status === 'active' ? 'green' : 'slate'}
-                    size="sm"
-                  />
+                  {renderStatusBadge(viewingCatalogue.status)}
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-[#4E45D5] bg-[#EEF2FF] px-2.5 py-1 rounded-md border border-[#C7D2FE] font-tabular">
                   <Package className="w-3.5 h-3.5" />
-                  <span>
-                    {viewingCatalogue.totalProducts}{' '}
-                    {viewingCatalogue.totalProducts === 1 ? 'Product' : 'Products'}
-                  </span>
+                  <span>{formatProductsCount(viewingCatalogue.totalProducts)}</span>
                 </div>
               </div>
 

@@ -68,56 +68,6 @@ export const SUBSCRIPTION_PLANS: Plan[] = [
   }
 ];
 
-export const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard', iconName: 'LayoutDashboard' },
-  { label: 'Categories', path: '/categories', iconName: 'FolderTree' },
-  { label: 'Products', path: '/products', iconName: 'Package' },
-  { label: 'Catalogue', path: '/catalogue', iconName: 'BookOpen' },
-  { label: 'Buyers', path: '/buyers', iconName: 'Users' },
-  { label: 'Inquiries', path: '/inquiries', iconName: 'MessageSquareText' },
-  { label: 'Orders', path: '/orders', iconName: 'ShoppingBag' },
-  { label: 'Stock', path: '/stock', iconName: 'Boxes' },
-  { label: 'Settings', path: '/settings', iconName: 'Settings' },
-];
-
-export const PAGE_TITLES: Record<string, { title: string; description: string }> = {
-  '/dashboard': {
-    title: 'Dashboard Overview',
-    description: 'Monitor daily wholesale fabric bookings, buyer inquiry volume, and live loom metrics.'
-  },
-  '/categories': {
-    title: 'Fabric Categories',
-    description: 'Organize textile varieties by weave, count, blend ratio, and seasonal collections.'
-  },
-  '/products': {
-    title: 'Product Master',
-    description: 'Manage fabric designs, GSM specifications, reed-pick construction, and bulk roll pricing.'
-  },
-  '/catalogue': {
-    title: 'Digital Wholesale Catalogue',
-    description: 'Curate dynamic digital swatch-books and shareable lookbooks for retail buyers.'
-  },
-  '/buyers': {
-    title: 'Verified Buyers Directory',
-    description: 'Manage garment manufacturers, regional fabric wholesalers, and retail chains.'
-  },
-  '/inquiries': {
-    title: 'Wholesale Inquiries',
-    description: 'Respond to bulk RFQs, sample cutting requests, and custom loom weave quotations.'
-  },
-  '/orders': {
-    title: 'Wholesale Fabric Orders',
-    description: 'Process thaan/bale wholesale dispatches, generate challans, and track delivery status.'
-  },
-  '/stock': {
-    title: 'Warehouse & Loom Stock',
-    description: 'Live inventory tracking for finished rolls, grey fabric batches, and pending loom runs.'
-  },
-  '/settings': {
-    title: 'Seller Profile & Mill Settings',
-    description: 'Configure wholesale trade terms, GST credentials, dispatch hubs, and notification preferences.'
-  }
-};
 
 export function formatCurrencyINR(amount: number): string {
   return new Intl.NumberFormat('en-IN', {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ShoppingBag,
   IndianRupee,
@@ -27,23 +27,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Filter orders by search and status
-  const filteredOrders = useMemo(() => {
-    return TODAY_ORDERS_DATA.filter((order) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        order.orderId.toLowerCase().includes(q) ||
-        order.buyerName.toLowerCase().includes(q) ||
-        order.productName.toLowerCase().includes(q);
-
-      const matchesStatus =
-        statusFilter === 'all' ||
-        order.status.toLowerCase() === statusFilter.toLowerCase();
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [searchQuery, statusFilter]);
+  // Orders table data (search and filter will be handled by backend; frontend does not filter)
+  const filteredOrders = TODAY_ORDERS_DATA;
 
   // CommonTable columns definition
   const orderColumns: TableColumn<DashboardOrder>[] = useMemo(

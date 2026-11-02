@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, Sliders, Check } from 'lucide-react';
 import { StockItem } from '@/types';
 import { useToast } from '@/hooks/useToast';
+import { InputField } from '@/components/FormControls';
 
 interface LowStockAlertProps {
   threshold: number;
@@ -51,14 +52,15 @@ export default function LowStockAlert({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
+        <div className="flex items-center gap-2 shrink-0">
+          <InputField
             id="threshold-input"
             type="number"
             min="1"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="w-20 h-10 px-3 bg-white border border-[#E2E1EC] rounded-lg text-sm text-[#100E26] font-tabular focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all text-center"
+            containerClassName="!w-20 shrink-0"
+            className="!w-20 text-center font-tabular"
           />
           <button
             type="button"

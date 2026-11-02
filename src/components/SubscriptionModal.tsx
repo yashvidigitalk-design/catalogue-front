@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Check, ArrowLeft, ShieldCheck, Sparkles, Building2 } from 'lucide-react';
 import { SUBSCRIPTION_PLANS, formatCurrencyINR } from '@/lib/sampleData';
 import { Plan } from '@/types';
@@ -106,7 +106,6 @@ export default function SubscriptionModal({
             /* STAGE 1: 3 Plan Cards */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {SUBSCRIPTION_PLANS.map((plan) => {
-                const isSelected = selectedPlan.id === plan.id;
                 const isPopular = Boolean(plan.popular);
 
                 return (

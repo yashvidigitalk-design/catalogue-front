@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import CommonTable from '@/components/CommonTable';
@@ -55,15 +55,8 @@ export default function ProductSelectionDrawer({
     })),
   ];
 
-  // Filter products by search (Category filter is NOT filtered from frontend)
-  const q = searchTerm.toLowerCase();
-  const filteredProducts = productsList.filter((p) => {
-    return (
-      searchTerm === '' ||
-      p.name.toLowerCase().includes(q) ||
-      p.designNumber.toLowerCase().includes(q)
-    );
-  });
+  // Filter products (backend will handle search & filter; frontend does not filter)
+  const filteredProducts = productsList;
 
   // Callback when a new product is created in ProductFormDrawer
   const handleNewProductSaved = (newProdData: Partial<Product>) => {

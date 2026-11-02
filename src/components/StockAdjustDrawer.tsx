@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Layers, Package, Plus, Minus } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import StatusBadge from '@/components/StatusBadge';
 import { StockItem } from '@/types';
 import { useToast } from '@/hooks/useToast';
+import { InputField, TextareaField } from '@/components/FormControls';
 
 interface StockAdjustDrawerProps {
   open: boolean;
@@ -204,44 +205,31 @@ export default function StockAdjustDrawer({
         </div>
 
         {/* Quantity Input */}
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-            Quantity {isStockIn ? 'to Add' : 'to Deduct'} (meters){' '}
-            <span className="text-[#E11D48]">*</span>
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => handleQuantityChange(e.target.value)}
-              placeholder="e.g. 100"
-              className={`input-base font-tabular ${
-                error ? 'border-[#E11D48] focus:border-[#E11D48]' : ''
-              }`}
-              autoFocus
-            />
-          </div>
-          {error && <p className="text-xs text-[#E11D48] mt-1">{error}</p>}
-        </div>
+        <InputField
+          label={`Quantity ${isStockIn ? 'to Add' : 'to Deduct'} (meters)`}
+          required
+          type="number"
+          min="1"
+          value={quantity}
+          onChange={(e) => handleQuantityChange(e.target.value)}
+          placeholder="e.g. 100"
+          className="font-tabular"
+          error={error}
+          autoFocus
+        />
 
         {/* Remark Textarea (optional) */}
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-            Remark / Reason (Optional)
-          </label>
-          <textarea
-            rows={3}
-            value={remark}
-            onChange={(e) => setRemark(e.target.value)}
-            placeholder={
-              isStockIn
-                ? 'e.g. Received fresh thaan rolls from loom unit #4, batch QC passed...'
-                : 'e.g. Dispatched against order #ORD-8921, sample cutting, damaged selvage...'
-            }
-            className="w-full p-2.5 text-sm bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-none"
-          />
-        </div>
+        <TextareaField
+          label="Remark / Reason (Optional)"
+          rows={3}
+          value={remark}
+          onChange={(e) => setRemark(e.target.value)}
+          placeholder={
+            isStockIn
+              ? 'e.g. Received fresh thaan rolls from loom unit #4, batch QC passed...'
+              : 'e.g. Dispatched against order #ORD-8921, sample cutting, damaged selvage...'
+          }
+        />
 
         {/* Updated Stock Preview Card (Live Update) */}
         <div className="p-4 rounded-xl bg-[#F7F7FB] border border-[#E2E1EC] space-y-3">

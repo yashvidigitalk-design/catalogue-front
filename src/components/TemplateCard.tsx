@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Eye, Sliders, Check } from 'lucide-react';
 import { CatalogueTemplate } from '@/types';
 import StatusBadge from '@/components/StatusBadge';

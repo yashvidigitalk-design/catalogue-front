@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { TOP_SELLING_PRODUCTS } from '@/lib/dashboardData';
 
 const BAR_SHADES = [

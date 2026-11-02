@@ -6,6 +6,7 @@ import WhatsAppPreview from '@/components/WhatsAppPreview';
 import { DEFAULT_WHATSAPP_SETTINGS } from '@/lib/settingsData';
 import { triggerToast } from '@/hooks/useToast';
 import { Copy, Save, Check, MessageSquare, Link2, Smartphone, Info } from 'lucide-react';
+import { InputField, TextareaField } from '@/components/FormControls';
 
 export default function WhatsAppSharingPage() {
   const [storefrontUrl] = useState(DEFAULT_WHATSAPP_SETTINGS.storefrontUrl);
@@ -70,24 +71,17 @@ export default function WhatsAppSharingPage() {
 
           <form onSubmit={handleSaveSettings} className="mt-5 space-y-5">
             {/* Website / Storefront Link */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Website / Storefront Link
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-3 text-[#9493A8]">
-                  <Link2 className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  readOnly
-                  value={storefrontUrl}
-                  className="input-base pl-9 pr-24 font-mono text-xs bg-[#F7F7FB] border-[#E2E1EC] text-[#100E26] select-all cursor-text"
-                />
+            <InputField
+              label="Website / Storefront Link"
+              type="text"
+              readOnly
+              value={storefrontUrl}
+              prefixIcon={<Link2 className="w-4 h-4 text-[#9493A8]" />}
+              suffix={
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="absolute right-1.5 h-7 px-3 rounded-md bg-white border border-[#E2E1EC] hover:bg-[#F7F7FB] text-xs font-medium text-[#100E26] flex items-center gap-1.5 shadow-2xs transition-colors"
+                  className="h-7 px-3 rounded-md bg-white border border-[#E2E1EC] hover:bg-[#F7F7FB] text-xs font-medium text-[#100E26] flex items-center gap-1.5 shadow-2xs transition-colors"
                   title="Copy link to clipboard"
                 >
                   {isCopied ? (
@@ -102,48 +96,37 @@ export default function WhatsAppSharingPage() {
                     </>
                   )}
                 </button>
-              </div>
-              <p className="text-[11px] text-[#5A586E]">
-                Direct digital swatch-book URL shared with garment manufacturers and retailers.
-              </p>
-            </div>
+              }
+              className="font-mono text-xs bg-[#F7F7FB] select-all cursor-text !pr-24"
+              helperText="Direct digital swatch-book URL shared with garment manufacturers and retailers."
+            />
 
             {/* WhatsApp Business Number */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                WhatsApp Business Number
-              </label>
-              <div className="flex items-center">
-                <span className="h-10 px-3.5 inline-flex items-center gap-1 bg-[#F7F7FB] border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-semibold text-[#5A586E] select-none">
+            <InputField
+              label="WhatsApp Business Number"
+              type="text"
+              value={businessNumber}
+              onChange={(e) => setBusinessNumber(e.target.value)}
+              placeholder="98765 43210"
+              prefixIcon={
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#5A586E]">
                   <Smartphone className="w-3.5 h-3.5 text-[#9493A8]" />
                   <span>+91</span>
                 </span>
-                <input
-                  type="text"
-                  value={businessNumber}
-                  onChange={(e) => setBusinessNumber(e.target.value)}
-                  placeholder="98765 43210"
-                  className="input-base rounded-l-none font-tabular"
-                />
-              </div>
-              <p className="text-[11px] text-[#5A586E]">
-                Incoming RFQs and sample cutting requests are forwarded to this WhatsApp number.
-              </p>
-            </div>
+              }
+              className="!pl-16 font-tabular"
+              helperText="Incoming RFQs and sample cutting requests are forwarded to this WhatsApp number."
+            />
 
             {/* Default Sharing Message */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                  Default Sharing Message
-                </label>
-                <span className="text-[10px] text-[#9493A8]">Live Preview Supported</span>
-              </div>
-              <textarea
+              <TextareaField
+                label="Default Sharing Message"
                 rows={5}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full p-3 text-xs bg-white border border-[#E2E1EC] rounded-lg text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] focus:ring-2 focus:ring-[#4E45D5]/15 transition-all resize-y leading-relaxed font-sans"
+                className="resize-y leading-relaxed font-sans"
+                helperText="Live Preview Supported"
               />
 
               {/* Tag Insertion Hints */}

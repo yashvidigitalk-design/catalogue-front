@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { TemplateCustomization } from '@/types';
 import { SAMPLE_PREVIEW_PRODUCTS } from '@/lib/settingsData';
 
@@ -35,7 +34,7 @@ export default function TemplatePreview({
   const isDrawer = mode === 'drawer';
 
   // SVG Fabric Weave Pattern Components
-  const renderFabricSwatch = (type: string, color: string) => {
+  const renderFabricSwatch = (type: string) => {
     switch (type) {
       case 'chanderi':
         return (
@@ -187,7 +186,7 @@ export default function TemplatePreview({
                   isMini ? 'h-10' : isDrawer ? 'h-28' : 'h-16 sm:h-20'
                 }`}
               >
-                {renderFabricSwatch(prod.patternType, prod.accentColor)}
+                {renderFabricSwatch(prod.patternType)}
               </div>
 
               {/* Product Info */}
@@ -320,7 +319,7 @@ export default function TemplatePreview({
             className="bg-[#17142F] border border-[#2B2848] rounded p-1 text-center overflow-hidden"
           >
             <div className={`w-full rounded mb-1 overflow-hidden ${isMini ? 'h-5' : 'h-7'}`}>
-              {renderFabricSwatch(item.swatch, item.color)}
+              {renderFabricSwatch(item.swatch)}
             </div>
             {showDesignNumber && (
               <div className="text-[8px] text-[#A9A7C0] truncate">{item.code}</div>

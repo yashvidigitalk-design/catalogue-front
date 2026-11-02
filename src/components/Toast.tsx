@@ -40,7 +40,7 @@ const toastConfigs: Record<
   },
 };
 
-export function ToastItem({ toast, onDismiss }: ToastProps) {
+function ToastItem({ toast, onDismiss }: ToastProps) {
   const config = toastConfigs[toast.type] || toastConfigs.info;
 
   useEffect(() => {

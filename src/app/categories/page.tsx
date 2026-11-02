@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   FolderTree,
   Eye,
@@ -19,6 +19,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import StatusBadge from '@/components/StatusBadge';
 import FilterDropdown from '@/components/FilterDropdown';
 import ImageUpload from '@/components/ImageUpload';
+import { InputField } from '@/components/FormControls';
 import { Category, TableColumn } from '@/types';
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
 import { useToast } from '@/hooks/useToast';
@@ -93,23 +94,8 @@ export default function CategoriesPage() {
   const totalProductsSum = INITIAL_CATEGORIES.reduce((acc, c) => acc + c.totalProducts, 0);
   const inactiveCategories = INITIAL_CATEGORIES.filter((c) => c.status === 'inactive').length;
 
-  // Filter Categories Table Data
-  const filteredCategories = INITIAL_CATEGORIES.filter((cat) => {
-    const matchesSearch =
-      searchTerm === '' ||
-      cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.subtitle.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'all' || cat.status === statusFilter;
-
-    const matchesVisibility =
-      visibilityFilter === 'all' ||
-      (visibilityFilter === 'visible' && cat.visibleOnStorefront) ||
-      (visibilityFilter === 'hidden' && !cat.visibleOnStorefront);
-
-    return matchesSearch && matchesStatus && matchesVisibility;
-  });
+  // Categories Table Data (backend handles search & filter; frontend does not filter)
+  const filteredCategories = INITIAL_CATEGORIES;
 
   // Main Categories Table Columns
   const categoryColumns: TableColumn<Category>[] = [
@@ -330,24 +316,17 @@ export default function CategoriesPage() {
       >
         <div className="space-y-5">
           {/* Category Name (required) */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-              Category Name <span className="text-[#E11D48]">*</span>
-            </label>
-            <input
-              type="text"
-              value={formName}
-              onChange={(e) => {
-                setFormName(e.target.value);
-                if (formErrors.name) setFormErrors({});
-              }}
-              placeholder="e.g. Banarasi Brocade"
-              className={`input-base ${formErrors.name ? 'border-[#E11D48]' : ''}`}
-            />
-            {formErrors.name && (
-              <p className="text-xs text-[#E11D48] mt-1">{formErrors.name}</p>
-            )}
-          </div>
+          <InputField
+            label="Category Name"
+            required
+            value={formName}
+            onChange={(e) => {
+              setFormName(e.target.value);
+              if (formErrors.name) setFormErrors({});
+            }}
+            placeholder="e.g. Banarasi Brocade"
+            error={formErrors.name}
+          />
 
           {/* Category Image (ImageUpload single, with preview) */}
           <div>

@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Package,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Search,
   ChevronDown,
   Trash2,
   Pencil,
@@ -21,6 +20,7 @@ import LowStockAlert from '@/components/LowStockAlert';
 import StockAdjustDrawer from '@/components/StockAdjustDrawer';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 import { StockItem } from '@/types';
 import { INITIAL_STOCK } from '@/lib/stockData';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
@@ -49,18 +49,28 @@ const ALL_CATALOGS = [
   'Wholesale Master Lookbook',
 ];
 
-const INITIAL_INVENTORY: InventoryItem[] = INITIAL_STOCK.map((item) => {
+const INITIAL_INVENTORY: InventoryItem[] = INITIAL_STOCK.map((item, idx) => {
   const matchingProduct = INITIAL_PRODUCTS.find(
     (p) =>
       p.designNumber === item.designNumber ||
       p.name.toLowerCase() === item.productName.toLowerCase()
   );
 
-  const matchingCatalogues = INITIAL_CATALOGUES.filter(
-    (c) =>
-      (matchingProduct && c.productIds?.includes(matchingProduct.id)) ||
-      c.name.toLowerCase().includes((item.fabric || '').toLowerCase())
-  ).map((c) => c.name);
+  const uniqueCatalogues = Array.from(
+    new Set(
+      INITIAL_CATALOGUES.filter(
+        (c) =>
+          (matchingProduct && c.productIds?.includes(matchingProduct.id)) ||
+          c.name.toLowerCase().includes((item.fabric || '').toLowerCase())
+      ).map((c) => c.name)
+    )
+  );
+
+  // Keep strictly 1 or 2 catalogs per item so table rows remain neat and compact
+  const limitedCatalogues =
+    uniqueCatalogues.length > 0
+      ? uniqueCatalogues.slice(0, idx % 2 === 0 ? 2 : 1)
+      : [ALL_CATALOGS[0] || 'Wholesale Master Lookbook'];
 
   const price = matchingProduct ? matchingProduct.wholesalePrice : 850;
   const moq = matchingProduct ? matchingProduct.moq : 50;
@@ -78,10 +88,7 @@ const INITIAL_INVENTORY: InventoryItem[] = INITIAL_STOCK.map((item) => {
     id: item.id,
     name: item.productName,
     image: item.productImage,
-    catalogs:
-      matchingCatalogues.length > 0
-        ? matchingCatalogues
-        : [ALL_CATALOGS[0] || 'Wholesale Master Lookbook'],
+    catalogs: limitedCatalogues,
     price,
     stock: item.availableStock,
     unit: item.unit || 'm',
@@ -313,24 +320,8 @@ export default function StockPage() {
 
   const lowStockCount = lowStockStockItems.length;
 
-  // Filter & Search Logic (Catalog filtering in frontend removed per user request)
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // Search term
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase();
-        const matchesName = item.name.toLowerCase().includes(q);
-        const matchesDesign = item.designNumber?.toLowerCase().includes(q);
-        const matchesCatalog = item.catalogs.some((c) => c.toLowerCase().includes(q));
-        if (!matchesName && !matchesDesign && !matchesCatalog) return false;
-      }
-
-      // Catalog Dropdown: Frontend filter removed per request:
-      // "second image mokli ema category ma filter thai che e front thi na thavu joie e remove kari de pn dropdown rakhvanu che"
-
-      return true;
-    });
-  }, [items, searchTerm]);
+  // Filter & Search Logic (backend will handle search & filter; frontend does not filter)
+  const filteredItems = items;
 
   // Sorted Items
   const sortedItems = useMemo(() => {
@@ -497,25 +488,20 @@ export default function StockPage() {
 
       {/* 4. Table Controls: Search & Catalogs Filter */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-        {/* Search box with embedded purple search icon button */}
-        <div className="relative flex items-center flex-1 sm:max-w-md">
-          <input
-            type="text"
+        {/* Search box with left search icon matching standard design */}
+        <div className="w-full sm:max-w-md">
+          <SearchInput
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
+            onChange={(val) => {
+              setSearchTerm(val);
               setCurrentPage(1);
             }}
             placeholder="Search by product, design no., or fabric..."
-            className="w-full h-10 pl-3.5 pr-10 bg-white border border-[#E2E1EC] rounded-lg text-xs text-[#100E26] placeholder-[#9493A8] focus:outline-none focus:border-[#4E45D5] transition-colors"
+            onClear={() => {
+              setSearchTerm('');
+              setCurrentPage(1);
+            }}
           />
-          <button
-            type="button"
-            className="absolute right-0 top-0 bottom-0 px-3 bg-[#4E45D5] hover:bg-[#4338CA] text-white rounded-r-lg flex items-center justify-center transition-colors"
-            title="Search"
-          >
-            <Search className="w-3.5 h-3.5" />
-          </button>
         </div>
 
         {/* All Catalogs Dropdown */}
@@ -641,7 +627,7 @@ export default function StockPage() {
 
                 {/* Actions */}
                 {visibleColumns.actions && (
-                  <th className="w-24 px-3 py-3 text-center">#</th>
+                  <th className="w-24 px-3 py-3 text-center">Actions</th>
                 )}
               </tr>
             </thead>

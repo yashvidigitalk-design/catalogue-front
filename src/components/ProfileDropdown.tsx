@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, LogOut, ChevronDown, CheckCircle2, Building, ShieldCheck } from 'lucide-react';
+import { LogOut, ChevronDown, CheckCircle2, Building } from 'lucide-react';
 import { CURRENT_SELLER } from '@/lib/sampleData';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { triggerToast } from '@/hooks/useToast';

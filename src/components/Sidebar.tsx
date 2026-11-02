@@ -20,7 +20,6 @@ import {
   Share2,
   X,
   Layers,
-  Sparkles,
 } from 'lucide-react';
 
 interface SidebarProps {

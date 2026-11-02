@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { CheckCircle2, Building2, Phone, MapPin, Calendar, Tag, Layers, Check } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import StatusBadge from '@/components/StatusBadge';
