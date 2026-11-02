@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import CommonTable from '@/components/CommonTable';
 import FilterDropdown from '@/components/FilterDropdown';
-import ProductFormDrawer from '@/components/ProductFormDrawer';
+import { ProductFormDrawer } from '@/components/ProductForm';
 import { Product, TableColumn } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';

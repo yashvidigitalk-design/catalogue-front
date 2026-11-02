@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Package,
   CheckCircle2,
@@ -18,7 +19,7 @@ import CommonDrawer from '@/components/CommonDrawer';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import StatusBadge from '@/components/StatusBadge';
 import FilterDropdown from '@/components/FilterDropdown';
-import ProductFormDrawer from '@/components/ProductFormDrawer';
+import { ProductFormDrawer } from '@/components/ProductForm';
 import { Product, TableColumn } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
@@ -315,14 +316,13 @@ export default function ProductsPage() {
         title="Products"
         description="Manage fabric designs, GSM specifications, reed-pick construction, and bulk roll pricing."
         actions={
-          <button
-            type="button"
-            onClick={handleOpenAdd}
+          <Link
+            href="/products/create"
             className="btn-primary"
           >
             <Plus className="w-4 h-4" />
             <span>Add Product</span>
-          </button>
+          </Link>
         }
       />
 
