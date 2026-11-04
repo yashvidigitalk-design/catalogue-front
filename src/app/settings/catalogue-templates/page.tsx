@@ -14,6 +14,56 @@ import { triggerToast } from '@/hooks/useToast';
 import { Check } from 'lucide-react';
 import { InputField, TextareaField } from '@/components/FormControls';
 
+const VISIBILITY_TOGGLES: {
+  key: 'showPrices' | 'showDesignNumber' | 'showMOQ';
+  label: string;
+  desc: string;
+}[] = [
+  {
+    key: 'showPrices',
+    label: 'Show Wholesale Prices',
+    desc: 'Display per-meter / per-piece wholesale rates',
+  },
+  {
+    key: 'showDesignNumber',
+    label: 'Show Design Numbers',
+    desc: 'Include design SKU codes (e.g. DES #CH-902)',
+  },
+  {
+    key: 'showMOQ',
+    label: 'Show Minimum Order Qty (MOQ)',
+    desc: 'Display minimum bale / roll requirements',
+  },
+];
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
+      {children}
+    </label>
+  );
+}
+
+function TemplatePreviewFrame({
+  templateId,
+  customization,
+  mode,
+}: {
+  templateId: string;
+  customization: TemplateCustomization;
+  mode: 'drawer' | 'mini';
+}) {
+  return (
+    <div className="rounded-xl overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB]">
+      <TemplatePreview
+        templateId={templateId as 'classic-grid' | 'elegant-lookbook'}
+        customization={customization}
+        mode={mode}
+      />
+    </div>
+  );
+}
+
 export default function CatalogueTemplatesPage() {
   const [templates, setTemplates] = useState<CatalogueTemplate[]>(DEFAULT_TEMPLATES);
   const [defaultTemplateId, setDefaultTemplateId] = useState<string>('classic-grid');
@@ -42,9 +92,10 @@ export default function CatalogueTemplatesPage() {
     );
   };
 
-  // Open Preview Drawer
-  const handleOpenPreview = (template: CatalogueTemplate) => {
-    setPreviewTemplate(template);
+  // Close Customize Drawer and clear form
+  const handleCloseCustomize = () => {
+    setCustomizeTemplate(null);
+    setCustomForm(null);
   };
 
   // Open Customize Drawer
@@ -69,9 +120,10 @@ export default function CatalogueTemplatesPage() {
       `Custom styling and visibility rules for ${customizeTemplate.name} have been updated.`
     );
 
-    setCustomizeTemplate(null);
-    setCustomForm(null);
+    handleCloseCustomize();
   };
+
+  const isPreviewDefault = previewTemplate?.id === defaultTemplateId;
 
   return (
     <div className="space-y-6">
@@ -89,7 +141,7 @@ export default function CatalogueTemplatesPage() {
             template={tpl}
             isDefault={tpl.id === defaultTemplateId}
             onSetDefault={handleSetDefault}
-            onPreview={handleOpenPreview}
+            onPreview={setPreviewTemplate}
             onCustomize={handleOpenCustomize}
           />
         ))}
@@ -104,13 +156,9 @@ export default function CatalogueTemplatesPage() {
           description="High-definition full page preview with active swatch patterns and pricing structure."
           width="xl"
           cancelText="Close"
-          saveText={
-            previewTemplate.id === defaultTemplateId
-              ? 'Default Template'
-              : 'Set as Default'
-          }
+          saveText={isPreviewDefault ? 'Default Template' : 'Set as Default'}
           onSave={
-            previewTemplate.id === defaultTemplateId
+            isPreviewDefault
               ? undefined
               : () => {
                   handleSetDefault(previewTemplate.id);
@@ -119,13 +167,11 @@ export default function CatalogueTemplatesPage() {
           }
         >
           <div className="space-y-4">
-            <div className="rounded-xl overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB]">
-              <TemplatePreview
-                templateId={previewTemplate.id as 'classic-grid' | 'elegant-lookbook'}
-                customization={previewTemplate.customization}
-                mode="drawer"
-              />
-            </div>
+            <TemplatePreviewFrame
+              templateId={previewTemplate.id}
+              customization={previewTemplate.customization}
+              mode="drawer"
+            />
             <p className="text-xs text-[#5A586E] text-center">
               This layout renders responsively on buyer mobiles, tablets, and PDF exports.
             </p>
@@ -137,10 +183,7 @@ export default function CatalogueTemplatesPage() {
       {customizeTemplate && customForm && (
         <CommonDrawer
           isOpen={Boolean(customizeTemplate)}
-          onClose={() => {
-            setCustomizeTemplate(null);
-            setCustomForm(null);
-          }}
+          onClose={handleCloseCustomize}
           title={`Customize ${customizeTemplate.name}`}
           description="Personalize headers, branding colors, and toggle product field visibility in real-time."
           width="lg"
@@ -151,16 +194,12 @@ export default function CatalogueTemplatesPage() {
           <div className="space-y-6">
             {/* Live Updating Mini Preview */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Live Layout Preview
-              </label>
-              <div className="rounded-xl overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB]">
-                <TemplatePreview
-                  templateId={customizeTemplate.id as 'classic-grid' | 'elegant-lookbook'}
-                  customization={customForm}
-                  mode="mini"
-                />
-              </div>
+              <SectionLabel>Live Layout Preview</SectionLabel>
+              <TemplatePreviewFrame
+                templateId={customizeTemplate.id}
+                customization={customForm}
+                mode="mini"
+              />
             </div>
 
             {/* Template Title */}
@@ -175,9 +214,7 @@ export default function CatalogueTemplatesPage() {
 
             {/* Brand Color (5 Swatches) */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Brand Color Accent
-              </label>
+              <SectionLabel>Brand Color Accent</SectionLabel>
               <div className="flex items-center gap-3">
                 {BRAND_COLOR_OPTIONS.map((c) => {
                   const isSelected = customForm.brandColor === c.hex;
@@ -209,90 +246,38 @@ export default function CatalogueTemplatesPage() {
 
             {/* Field Visibility Toggles */}
             <div className="space-y-3 pt-3 border-t border-[#E2E1EC]">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#100E26]">
-                Field Visibility Rules
-              </label>
+              <SectionLabel>Field Visibility Rules</SectionLabel>
 
-              {/* Show Prices Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-[#E2E1EC] bg-[#FAF9FD]">
-                <div>
-                  <div className="text-xs font-bold text-[#100E26]">Show Wholesale Prices</div>
-                  <div className="text-[11px] text-[#5A586E]">
-                    Display per-meter / per-piece wholesale rates
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomForm({ ...customForm, showPrices: !customForm.showPrices })
-                  }
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    customForm.showPrices ? 'bg-[#4E45D5]' : 'bg-[#D5D4E2]'
-                  }`}
-                  aria-label="Toggle prices"
-                >
+              {VISIBILITY_TOGGLES.map(({ key, label, desc }) => {
+                const isEnabled = customForm[key];
+                return (
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      customForm.showPrices ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Show Design Number Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-[#E2E1EC] bg-[#FAF9FD]">
-                <div>
-                  <div className="text-xs font-bold text-[#100E26]">Show Design Numbers</div>
-                  <div className="text-[11px] text-[#5A586E]">
-                    Include design SKU codes (e.g. DES #CH-902)
+                    key={key}
+                    className="flex items-center justify-between p-3 rounded-lg border border-[#E2E1EC] bg-[#FAF9FD]"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-[#100E26]">{label}</div>
+                      <div className="text-[11px] text-[#5A586E]">{desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCustomForm({ ...customForm, [key]: !isEnabled })
+                      }
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        isEnabled ? 'bg-[#4E45D5]' : 'bg-[#D5D4E2]'
+                      }`}
+                      aria-label={`Toggle ${label}`}
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          isEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomForm({
-                      ...customForm,
-                      showDesignNumber: !customForm.showDesignNumber,
-                    })
-                  }
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    customForm.showDesignNumber ? 'bg-[#4E45D5]' : 'bg-[#D5D4E2]'
-                  }`}
-                  aria-label="Toggle design number"
-                >
-                  <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      customForm.showDesignNumber ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Show MOQ Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-[#E2E1EC] bg-[#FAF9FD]">
-                <div>
-                  <div className="text-xs font-bold text-[#100E26]">Show Minimum Order Qty (MOQ)</div>
-                  <div className="text-[11px] text-[#5A586E]">
-                    Display minimum bale / roll requirements
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomForm({ ...customForm, showMOQ: !customForm.showMOQ })
-                  }
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    customForm.showMOQ ? 'bg-[#4E45D5]' : 'bg-[#D5D4E2]'
-                  }`}
-                  aria-label="Toggle MOQ"
-                >
-                  <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      customForm.showMOQ ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
+                );
+              })}
             </div>
 
             {/* Footer Note */}

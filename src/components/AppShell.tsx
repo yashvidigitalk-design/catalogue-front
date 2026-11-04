@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import Toast from '@/components/Toast';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -16,6 +17,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isAuthPage) {
     return (
       <div className="min-h-screen bg-[#F7F7FB] text-[#100E26]">
+        {children}
+        <Toast />
+      </div>
+    );
+  }
+
+  if (pathname === '/login') {
+    return (
+      <div className="min-h-screen bg-[#F7F7FB]">
         {children}
         <Toast />
       </div>

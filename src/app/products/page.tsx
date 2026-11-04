@@ -2,29 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import {
-  Package,
-  CheckCircle2,
-  AlertTriangle,
-  Coins,
-  Plus,
-  Eye,
-  Edit2,
-  Trash2,
-} from 'lucide-react';
+import { Package, CheckCircle2, AlertTriangle, Coins, Plus, Eye, Edit2, Trash2, } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import StatCard from '@/components/StatCard';
 import CommonTable from '@/components/CommonTable';
-import CommonDrawer from '@/components/CommonDrawer';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import StatusBadge from '@/components/StatusBadge';
 import FilterDropdown from '@/components/FilterDropdown';
 import { ProductFormDrawer } from '@/components/ProductForm';
+import ProductDetailsDrawer from '@/components/ProductDetailsDrawer';
 import { Product, TableColumn } from '@/types';
 import { INITIAL_PRODUCTS } from '@/lib/productsData';
 import { INITIAL_CATEGORIES } from '@/lib/categoriesData';
 import { formatCurrencyINR } from '@/lib/sampleData';
 import { useToast } from '@/hooks/useToast';
+
+const ACTION_BTN_CLASS = 'p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors';
 
 export default function ProductsPage() {
   const { showToast } = useToast();
@@ -172,18 +165,18 @@ export default function ProductsPage() {
         const statusText = isOutOfStock
           ? 'Out of Stock'
           : isLowStock
-          ? 'Low Stock'
-          : 'In Stock';
+            ? 'Low Stock'
+            : 'In Stock';
         const colorClass = isOutOfStock
           ? 'text-[#E11D48]'
           : isLowStock
-          ? 'text-[#D97706]'
-          : 'text-[#059669]';
+            ? 'text-[#D97706]'
+            : 'text-[#059669]';
         const dotBgClass = isOutOfStock
           ? 'bg-[#E11D48]'
           : isLowStock
-          ? 'bg-[#D97706]'
-          : 'bg-[#059669]';
+            ? 'bg-[#D97706]'
+            : 'bg-[#059669]';
 
         return (
           <span className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${colorClass}`}>
@@ -226,7 +219,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={() => setViewingProduct(p)}
-            className="p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
+            className={ACTION_BTN_CLASS}
             title="View Product"
             aria-label="View Product"
           >
@@ -235,7 +228,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={() => handleOpenEdit(p)}
-            className="p-1 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
+            className={ACTION_BTN_CLASS}
             title="Edit Product"
             aria-label="Edit Product"
           >
@@ -356,160 +349,13 @@ export default function ProductsPage() {
         product={editingProduct}
       />
 
-      {/* View Product Drawer (Read-only CommonDrawer) */}
-      <CommonDrawer
-        isOpen={Boolean(viewingProduct)}
+      {/* View Product Details Drawer */}
+      <ProductDetailsDrawer
+        open={Boolean(viewingProduct)}
         onClose={() => setViewingProduct(null)}
-        title="Product Details"
-        description="Wholesale fabric specifications, pricing slabs, and loom inventory."
-        cancelText="Close"
-        width="xl"
-      >
-        {viewingProduct && (
-          <div className="space-y-6">
-            {/* Image Gallery */}
-            <div>
-              <div className="h-64 rounded-xl overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={viewingProduct.image}
-                  alt={viewingProduct.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {viewingProduct.images && viewingProduct.images.length > 1 && (
-                <div className="flex gap-2.5 mt-3 overflow-x-auto pb-1">
-                  {viewingProduct.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="w-16 h-16 rounded-lg overflow-hidden border border-[#E2E1EC] shrink-0"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img}
-                        alt={`Swatch ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Header info */}
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-md bg-[#EEF2FF] text-[#4E45D5] border border-[#C7D2FE] text-xs font-bold font-tabular">
-                  {viewingProduct.designNumber}
-                </span>
-                <StatusBadge
-                  label={viewingProduct.status === 'active' ? 'Active' : 'Inactive'}
-                  variant={viewingProduct.status === 'active' ? 'green' : 'slate'}
-                  size="sm"
-                />
-                <StatusBadge
-                  label={
-                    viewingProduct.stock === 0
-                      ? 'Out of Stock'
-                      : viewingProduct.stock <= 10
-                      ? 'Low Stock'
-                      : 'In Stock'
-                  }
-                  variant={
-                    viewingProduct.stock === 0
-                      ? 'red'
-                      : viewingProduct.stock <= 10
-                      ? 'amber'
-                      : 'green'
-                  }
-                  size="sm"
-                />
-              </div>
-
-              <h3 className="text-xl font-bold text-[#100E26] mt-2 leading-tight">
-                {viewingProduct.name}
-              </h3>
-              <p className="text-sm text-[#5A586E] mt-1">
-                {viewingProduct.subtitle}
-              </p>
-            </div>
-
-            {/* Wholesale Price & MRP card */}
-            <div className="p-4 bg-[#F7F7FB] border border-[#E2E1EC] rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <span className="text-xs text-[#5A586E] block">Wholesale Price</span>
-                <span className="text-lg font-bold text-[#100E26] font-tabular">
-                  ₹{viewingProduct.wholesalePrice.toLocaleString('en-IN')}/m
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-[#5A586E] block">MRP</span>
-                <span className="text-lg font-semibold text-[#9493A8] line-through font-tabular">
-                  ₹{viewingProduct.mrp.toLocaleString('en-IN')}/m
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-[#5A586E] block">Stock Available</span>
-                <span className="text-lg font-bold text-[#100E26] font-tabular">
-                  {viewingProduct.stock} m
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-[#5A586E] block">Minimum Order (MOQ)</span>
-                <span className="text-lg font-bold text-[#100E26] font-tabular">
-                  {viewingProduct.moq} m
-                </span>
-              </div>
-            </div>
-
-            {/* Specs Grid */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="p-3 bg-white border border-[#E2E1EC] rounded-lg">
-                <span className="text-xs text-[#5A586E] block">Category</span>
-                <span className="font-semibold text-[#100E26] mt-0.5 block">
-                  {viewingProduct.category}
-                </span>
-              </div>
-              <div className="p-3 bg-white border border-[#E2E1EC] rounded-lg">
-                <span className="text-xs text-[#5A586E] block">Fabric Construction</span>
-                <span className="font-semibold text-[#100E26] mt-0.5 block">
-                  {viewingProduct.fabric}
-                </span>
-              </div>
-              <div className="p-3 bg-white border border-[#E2E1EC] rounded-lg">
-                <span className="text-xs text-[#5A586E] block">Weight / GSM</span>
-                <span className="font-semibold text-[#100E26] mt-0.5 block">
-                  {viewingProduct.weight || '120 GSM'}
-                </span>
-              </div>
-              <div className="p-3 bg-white border border-[#E2E1EC] rounded-lg">
-                <span className="text-xs text-[#5A586E] block">Retail Margin Advantage</span>
-                <span className="font-semibold text-[#059669] mt-0.5 block">
-                  {Math.round(
-                    ((viewingProduct.mrp - viewingProduct.wholesalePrice) /
-                      viewingProduct.mrp) *
-                      100
-                  )}
-                  % Margins
-                </span>
-              </div>
-            </div>
-
-            {/* Description */}
-            {viewingProduct.description && (
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#100E26] mb-1.5">
-                  Fabric Description & Recommended Garments
-                </h4>
-                <p className="text-sm text-[#5A586E] leading-relaxed bg-[#F7F7FB] p-3.5 rounded-xl border border-[#E2E1EC]">
-                  {viewingProduct.description}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </CommonDrawer>
+        product={viewingProduct}
+        onEdit={handleOpenEdit}
+      />
 
       {/* ConfirmationModal: Delete Product */}
       <ConfirmationModal

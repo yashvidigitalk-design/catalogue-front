@@ -42,28 +42,25 @@ export default function WhatsAppPreview({
 
         {/* Segmented Switch: Catalogue Share / Product Share */}
         <div className="inline-flex items-center p-1 bg-[#F7F7FB] border border-[#E2E1EC] rounded-lg shrink-0">
-          <button
-            type="button"
-            onClick={() => setShareMode('catalogue')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              shareMode === 'catalogue'
-                ? 'bg-white text-[#100E26] shadow-xs border border-[#E2E1EC]/60'
-                : 'text-[#5A586E] hover:text-[#100E26]'
-            }`}
-          >
-            Catalogue Share
-          </button>
-          <button
-            type="button"
-            onClick={() => setShareMode('product')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              shareMode === 'product'
-                ? 'bg-white text-[#100E26] shadow-xs border border-[#E2E1EC]/60'
-                : 'text-[#5A586E] hover:text-[#100E26]'
-            }`}
-          >
-            Product Share
-          </button>
+          {(
+            [
+              { key: 'catalogue', label: 'Catalogue Share' },
+              { key: 'product', label: 'Product Share' },
+            ] as const
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setShareMode(key)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                shareMode === key
+                  ? 'bg-white text-[#100E26] shadow-xs border border-[#E2E1EC]/60'
+                  : 'text-[#5A586E] hover:text-[#100E26]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -144,24 +141,6 @@ export default function WhatsAppPreview({
                 <div className="font-bold text-[#100E26] text-xs leading-snug">
                   Summer Silk Collection 2025
                 </div>
-
-                {/* Message Body */}
-                <p className="text-[11px] text-[#2C3E50] leading-relaxed mt-1 whitespace-pre-line">
-                  {formattedText}
-                </p>
-
-                {/* Blue Underlined Link */}
-                <div className="pt-1.5 border-t border-[#CDE5BA]/60">
-                  <a
-                    href={storefrontUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[#0D6EFD] underline font-medium text-[11px] break-all inline-flex items-center gap-1 hover:text-[#0A58CA]"
-                  >
-                    <span>{storefrontUrl}</span>
-                    <ExternalLink className="w-3 h-3 shrink-0" />
-                  </a>
-                </div>
               </div>
             ) : (
               /* Product Share Bubble Content */
@@ -210,7 +189,7 @@ export default function WhatsAppPreview({
                 </div>
 
                 {/* Wholesale Price & MOQ */}
-                <div className="p-1.5 bg-[#DCF8C6] border border-[#C2E7A9] rounded flex items-center justify-between font-tabular">
+                <div className="p-1.5 bg-[#DCF8C6] border border-[#C2E7A9] rounded flex items-center justify-between font-tabular mt-2">
                   <span className="font-bold text-[#100E26] text-xs">
                     Wholesale ₹1,850 / pc
                   </span>
@@ -218,26 +197,26 @@ export default function WhatsAppPreview({
                     MOQ: 20 pcs
                   </span>
                 </div>
-
-                {/* Message Body */}
-                <p className="text-[11px] text-[#2C3E50] leading-relaxed whitespace-pre-line">
-                  {formattedText}
-                </p>
-
-                {/* Blue Underlined Link */}
-                <div className="pt-1.5 border-t border-[#CDE5BA]/60">
-                  <a
-                    href={storefrontUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[#0D6EFD] underline font-medium text-[11px] break-all inline-flex items-center gap-1 hover:text-[#0A58CA]"
-                  >
-                    <span>{storefrontUrl}</span>
-                    <ExternalLink className="w-3 h-3 shrink-0" />
-                  </a>
-                </div>
               </div>
             )}
+
+            {/* Message Body */}
+            <p className="text-[11px] text-[#2C3E50] leading-relaxed whitespace-pre-line">
+              {formattedText}
+            </p>
+
+            {/* Blue Underlined Link */}
+            <div className="pt-1.5 border-t border-[#CDE5BA]/60">
+              <a
+                href={storefrontUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#0D6EFD] underline font-medium text-[11px] break-all inline-flex items-center gap-1 hover:text-[#0A58CA]"
+              >
+                <span>{storefrontUrl}</span>
+                <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            </div>
 
             {/* Bubble Time and Double Blue Ticks */}
             <div className="flex items-center justify-end gap-1 text-[9px] text-[#5A586E] pt-0.5">

@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useId } from 'react';
 import { TemplateCustomization } from '@/types';
 import { SAMPLE_PREVIEW_PRODUCTS } from '@/lib/settingsData';
 
@@ -10,12 +11,99 @@ interface TemplatePreviewProps {
   className?: string;
 }
 
+interface SwatchDef {
+  bg: string;
+  opacity: string;
+  width: number;
+  height: number;
+  elements: React.ReactNode;
+  extra?: React.ReactNode;
+}
+
+const SWATCH_CONFIGS: Record<string, SwatchDef> = {
+  chanderi: {
+    bg: 'bg-gradient-to-br from-[#4E45D5]/20 via-[#6860EF]/15 to-[#312E81]/30',
+    opacity: 'opacity-35',
+    width: 16,
+    height: 16,
+    elements: (
+      <>
+        <path d="M 0 8 L 8 0 L 16 8 L 8 16 Z" fill="none" stroke="#4E45D5" strokeWidth="1" />
+        <circle cx="8" cy="8" r="1.5" fill="#D97706" />
+      </>
+    ),
+    extra: <div className="relative z-10 w-2 h-2 rounded-full bg-[#4E45D5]/40" />,
+  },
+  mulmul: {
+    bg: 'bg-gradient-to-br from-[#ECFDF5] via-[#D1FAE5] to-[#A7F3D0]/50',
+    opacity: 'opacity-40',
+    width: 10,
+    height: 10,
+    elements: (
+      <>
+        <line x1="0" y1="0" x2="10" y2="10" stroke="#059669" strokeWidth="0.8" />
+        <line x1="10" y1="0" x2="0" y2="0" stroke="#059669" strokeWidth="0.8" />
+      </>
+    ),
+  },
+  brocade: {
+    bg: 'bg-gradient-to-br from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A]/60',
+    opacity: 'opacity-45',
+    width: 20,
+    height: 20,
+    elements: (
+      <>
+        <path d="M 0 10 Q 5 0 10 10 Q 15 20 20 10" fill="none" stroke="#D97706" strokeWidth="1.2" />
+        <circle cx="10" cy="10" r="2" fill="#B45309" />
+      </>
+    ),
+  },
+  slub: {
+    bg: 'bg-gradient-to-br from-[#EEF2FF] via-[#E0E7FF] to-[#C7D2FE]/60',
+    opacity: 'opacity-35',
+    width: 14,
+    height: 8,
+    elements: (
+      <line x1="0" y1="4" x2="14" y2="4" stroke="#4338CA" strokeWidth="1.5" strokeDasharray="6 3" />
+    ),
+  },
+  organza: {
+    bg: 'bg-gradient-to-br from-[#FFF1F2] via-[#FFE4E6] to-[#FECDD3]/60',
+    opacity: 'opacity-40',
+    width: 18,
+    height: 18,
+    elements: (
+      <polygon points="9,1 17,9 9,17 1,9" fill="none" stroke="#E11D48" strokeWidth="1" />
+    ),
+  },
+  tussar: {
+    bg: 'bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0]',
+    opacity: 'opacity-35',
+    width: 12,
+    height: 12,
+    elements: (
+      <>
+        <line x1="0" y1="0" x2="12" y2="0" stroke="#64748B" strokeWidth="1.2" strokeDasharray="8 2" />
+        <line x1="0" y1="6" x2="12" y2="6" stroke="#64748B" strokeWidth="1.2" strokeDasharray="3 5" />
+      </>
+    ),
+  },
+};
+
+const LOOKBOOK_SWATCHES = [
+  { name: 'Pure Chanderi', code: '#CH-902', swatch: 'chanderi' },
+  { name: 'Organza Floral', code: '#OF-553', swatch: 'organza' },
+  { name: 'Tussar Ghicha', code: '#TG-112', swatch: 'tussar' },
+  { name: 'Rayon Slub', code: '#RS-108', swatch: 'slub' },
+];
+
 export default function TemplatePreview({
   templateId,
   customization,
   mode = 'card',
   className = '',
 }: TemplatePreviewProps) {
+  const uid = useId().replace(/:/g, '');
   const isDark = templateId === 'elegant-lookbook';
   const title =
     customization?.title ||
@@ -23,7 +111,7 @@ export default function TemplatePreview({
   const brandColor = customization?.brandColor || (isDark ? '#100E26' : '#4E45D5');
   const showPrices = customization?.showPrices ?? true;
   const showDesignNumber = customization?.showDesignNumber ?? true;
-  const showMOQ = customization?.showMOQ ?? (isDark ? false : true);
+  const showMOQ = customization?.showMOQ ?? !isDark;
   const footerNote =
     customization?.footerNote ||
     (isDark
@@ -33,103 +121,35 @@ export default function TemplatePreview({
   const isMini = mode === 'mini';
   const isDrawer = mode === 'drawer';
 
-  // SVG Fabric Weave Pattern Components
+  // Responsive mode typography & spacing helpers
+  const containerPadding = isMini ? 'p-3 text-[10px]' : isDrawer ? 'p-6 text-sm' : 'p-4 text-xs';
+  const titleFontSize = isMini ? '11px' : isDrawer ? '18px' : '13px';
+  const productFontSize = isMini ? '9px' : isDrawer ? '12px' : '10px';
+
+  // SVG Fabric Weave Pattern Renderer
   const renderFabricSwatch = (type: string) => {
-    switch (type) {
-      case 'chanderi':
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#4E45D5]/20 via-[#6860EF]/15 to-[#312E81]/30 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-35" width="100%" height="100%">
-              <defs>
-                <pattern id="chanderiPattern" width="16" height="16" patternUnits="userSpaceOnUse">
-                  <path d="M 0 8 L 8 0 L 16 8 L 8 16 Z" fill="none" stroke="#4E45D5" strokeWidth="1" />
-                  <circle cx="8" cy="8" r="1.5" fill="#D97706" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#chanderiPattern)" />
-            </svg>
-            <div className="relative z-10 w-2 h-2 rounded-full bg-[#4E45D5]/40" />
-          </div>
-        );
-      case 'mulmul':
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#ECFDF5] via-[#D1FAE5] to-[#A7F3D0]/50 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-40" width="100%" height="100%">
-              <defs>
-                <pattern id="mulmulPattern" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="10" y2="10" stroke="#059669" strokeWidth="0.8" />
-                  <line x1="10" y1="0" x2="0" y2="10" stroke="#059669" strokeWidth="0.8" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#mulmulPattern)" />
-            </svg>
-          </div>
-        );
-      case 'brocade':
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A]/60 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-45" width="100%" height="100%">
-              <defs>
-                <pattern id="brocadePattern" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 0 10 Q 5 0 10 10 Q 15 20 20 10" fill="none" stroke="#D97706" strokeWidth="1.2" />
-                  <circle cx="10" cy="10" r="2" fill="#B45309" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#brocadePattern)" />
-            </svg>
-          </div>
-        );
-      case 'slub':
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#EEF2FF] via-[#E0E7FF] to-[#C7D2FE]/60 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-35" width="100%" height="100%">
-              <defs>
-                <pattern id="slubPattern" width="14" height="8" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="4" x2="14" y2="4" stroke="#4338CA" strokeWidth="1.5" strokeDasharray="6 3" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#slubPattern)" />
-            </svg>
-          </div>
-        );
-      case 'organza':
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#FFF1F2] via-[#FFE4E6] to-[#FECDD3]/60 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-40" width="100%" height="100%">
-              <defs>
-                <pattern id="organzaPattern" width="18" height="18" patternUnits="userSpaceOnUse">
-                  <polygon points="9,1 17,9 9,17 1,9" fill="none" stroke="#E11D48" strokeWidth="1" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#organzaPattern)" />
-            </svg>
-          </div>
-        );
-      case 'tussar':
-      default:
-        return (
-          <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full opacity-35" width="100%" height="100%">
-              <defs>
-                <pattern id="tussarPattern" width="12" height="12" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="12" y2="0" stroke="#64748B" strokeWidth="1.2" strokeDasharray="8 2" />
-                  <line x1="0" y1="6" x2="12" y2="6" stroke="#64748B" strokeWidth="1.2" strokeDasharray="3 5" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#tussarPattern)" />
-            </svg>
-          </div>
-        );
-    }
+    const swatch = SWATCH_CONFIGS[type] || SWATCH_CONFIGS.tussar;
+    const patId = `${uid}_${type}`;
+    return (
+      <div className={`w-full h-full relative overflow-hidden ${swatch.bg} flex items-center justify-center`}>
+        <svg className={`absolute inset-0 w-full h-full ${swatch.opacity}`} width="100%" height="100%">
+          <defs>
+            <pattern id={patId} width={swatch.width} height={swatch.height} patternUnits="userSpaceOnUse">
+              {swatch.elements}
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill={`url(#${patId})`} />
+        </svg>
+        {swatch.extra}
+      </div>
+    );
   };
 
   // 1. CLASSIC GRID LAYOUT (Clean White, 2x3 Grid)
   if (!isDark) {
     return (
       <div
-        className={`w-full bg-white border border-[#E2E1EC] rounded-xl flex flex-col justify-between overflow-hidden shadow-xs select-none ${
-          isMini ? 'p-3 text-[10px]' : isDrawer ? 'p-6 text-sm' : 'p-4 text-xs'
-        } ${className}`}
+        className={`w-full bg-white border border-[#E2E1EC] rounded-xl flex flex-col justify-between overflow-hidden shadow-xs select-none ${containerPadding} ${className}`}
       >
         {/* Header */}
         <div
@@ -153,7 +173,7 @@ export default function TemplatePreview({
             </div>
             <div
               className="font-extrabold text-[#100E26] mt-0.5 tracking-tight truncate max-w-[280px]"
-              style={{ fontSize: isMini ? '11px' : isDrawer ? '18px' : '13px' }}
+              style={{ fontSize: titleFontSize }}
             >
               {title}
             </div>
@@ -171,7 +191,7 @@ export default function TemplatePreview({
 
         {/* 2x3 Product Grid */}
         <div
-          className={`grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3 ${
+          className={`grid grid-cols-2 sm:grid-cols-3 ${
             isMini ? 'gap-1.5 my-2' : isDrawer ? 'gap-4 my-5' : 'gap-2.5 my-3'
           }`}
         >
@@ -198,7 +218,7 @@ export default function TemplatePreview({
                 )}
                 <div
                   className="font-bold text-[#100E26] truncate leading-tight mt-0.5"
-                  style={{ fontSize: isMini ? '9px' : isDrawer ? '12px' : '10px' }}
+                  style={{ fontSize: productFontSize }}
                 >
                   {prod.name}
                 </div>
@@ -207,7 +227,7 @@ export default function TemplatePreview({
                   {showPrices ? (
                     <span
                       className="font-bold font-tabular text-[#100E26]"
-                      style={{ fontSize: isMini ? '9px' : isDrawer ? '12px' : '10px' }}
+                      style={{ fontSize: productFontSize }}
                     >
                       {prod.price}
                       <span className="text-[8px] font-normal text-[#5A586E]">/{prod.unit}</span>
@@ -237,11 +257,12 @@ export default function TemplatePreview({
   }
 
   // 2. ELEGANT LOOKBOOK LAYOUT (Dark #100E26, Hero Swatch, Gold Accents)
+  const goldGlowId = `${uid}_goldGlow`;
+  const lookbookPatternId = `${uid}_lookbookPattern`;
+
   return (
     <div
-      className={`w-full bg-[#100E26] text-white border border-[#2B2848] rounded-xl flex flex-col justify-between overflow-hidden shadow-xs select-none ${
-        isMini ? 'p-3 text-[10px]' : isDrawer ? 'p-6 text-sm' : 'p-4 text-xs'
-      } ${className}`}
+      className={`w-full bg-[#100E26] text-white border border-[#2B2848] rounded-xl flex flex-col justify-between overflow-hidden shadow-xs select-none ${containerPadding} ${className}`}
     >
       {/* Top Lookbook Header */}
       <div className="pb-2.5 border-b border-[#2B2848] flex items-center justify-between">
@@ -251,7 +272,7 @@ export default function TemplatePreview({
           </span>
           <div
             className="font-extrabold text-white tracking-tight mt-0.5 truncate max-w-[280px]"
-            style={{ fontSize: isMini ? '11px' : isDrawer ? '18px' : '13px' }}
+            style={{ fontSize: titleFontSize }}
           >
             {title}
           </div>
@@ -274,17 +295,17 @@ export default function TemplatePreview({
         <div className="absolute inset-0 bg-gradient-to-tr from-[#0B091C] via-[#1D1740] to-[#392E6B] opacity-95" />
         <svg className="absolute inset-0 w-full h-full opacity-35" width="100%" height="100%">
           <defs>
-            <radialGradient id="goldGlow" cx="50%" cy="30%" r="60%">
+            <radialGradient id={goldGlowId} cx="50%" cy="30%" r="60%">
               <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#100E26" stopOpacity="0.0" />
             </radialGradient>
-            <pattern id="lookbookPattern" width="24" height="24" patternUnits="userSpaceOnUse">
+            <pattern id={lookbookPatternId} width="24" height="24" patternUnits="userSpaceOnUse">
               <path d="M 0 12 Q 6 0 12 12 Q 18 24 24 12" fill="none" stroke="#D4AF37" strokeWidth="0.8" />
               <circle cx="12" cy="12" r="1.5" fill="#F59E0B" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#goldGlow)" />
-          <rect width="100%" height="100%" fill="url(#lookbookPattern)" />
+          <rect width="100%" height="100%" fill={`url(#${goldGlowId})`} />
+          <rect width="100%" height="100%" fill={`url(#${lookbookPatternId})`} />
         </svg>
 
         {/* Hero Overlay Text */}
@@ -308,14 +329,9 @@ export default function TemplatePreview({
 
       {/* Swatch Strip Below Hero */}
       <div className="grid grid-cols-4 gap-2 my-1">
-        {[
-          { name: 'Pure Chanderi', code: '#CH-902', color: '#6D28D9', swatch: 'chanderi' },
-          { name: 'Organza Floral', code: '#OF-553', color: '#BE123C', swatch: 'organza' },
-          { name: 'Tussar Ghicha', code: '#TG-112', color: '#B45309', swatch: 'tussar' },
-          { name: 'Rayon Slub', code: '#RS-108', color: '#1E40AF', swatch: 'slub' },
-        ].map((item, i) => (
+        {LOOKBOOK_SWATCHES.map((item) => (
           <div
-            key={i}
+            key={item.code}
             className="bg-[#17142F] border border-[#2B2848] rounded p-1 text-center overflow-hidden"
           >
             <div className={`w-full rounded mb-1 overflow-hidden ${isMini ? 'h-5' : 'h-7'}`}>
