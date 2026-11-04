@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Sliders, Check } from 'lucide-react';
 import { StockItem } from '@/types';
 import { useToast } from '@/hooks/useToast';
-import { InputField } from '@/components/FormControls';
 
 interface LowStockAlertProps {
   threshold: number;
@@ -20,6 +19,10 @@ export default function LowStockAlert({
   const { showToast } = useToast();
   const [inputValue, setInputValue] = useState<number | string>(threshold);
 
+  useEffect(() => {
+    setInputValue(threshold);
+  }, [threshold]);
+
   const handleSave = () => {
     const num = Number(inputValue);
     if (isNaN(num) || num < 0) {
@@ -31,10 +34,10 @@ export default function LowStockAlert({
   };
 
   const displayedItems = lowStockItems.slice(0, 4);
-  const remainingCount = lowStockItems.length - displayedItems.length;
+  const remainingCount = lowStockItems.length - 4;
 
   return (
-    <div className="bg-white border border-[#E2E1EC] rounded-xl p-5 shadow-[0_1px_3px_rgba(16,14,38,0.05)] space-y-4">
+    <div className="bg-white border border-[#E2E1EC] rounded-xl p-5 shadow-xs space-y-4">
       {/* Settings Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -53,14 +56,13 @@ export default function LowStockAlert({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <InputField
+          <input
             id="threshold-input"
             type="number"
             min="1"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            containerClassName="!w-20 shrink-0"
-            className="!w-20 text-center font-tabular"
+            className="input-base w-20 text-center font-tabular shrink-0"
           />
           <button
             type="button"
@@ -87,9 +89,9 @@ export default function LowStockAlert({
             {displayedItems.map((item) => (
               <span
                 key={item.id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#FDE68A] text-xs font-medium text-[#100E26] shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#FDE68A] text-xs font-medium text-[#100E26] shadow-xs"
               >
-                <span className="font-semibold text-[#100E26] truncate max-w-[200px]">
+                <span className="font-semibold truncate max-w-[200px]">
                   {item.productName}
                 </span>
                 <span className="text-[#D97706] font-bold font-tabular">
@@ -109,4 +111,3 @@ export default function LowStockAlert({
     </div>
   );
 }
-

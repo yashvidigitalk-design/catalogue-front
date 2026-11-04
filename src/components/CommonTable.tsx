@@ -22,6 +22,12 @@ interface CommonTableProps<T> {
   keyExtractor?: (item: T, index: number) => string | number;
 }
 
+const ALIGN_MAP = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+} as const;
+
 export default function CommonTable<T>({
   columns,
   data,
@@ -43,16 +49,14 @@ export default function CommonTable<T>({
   const [internalPage, setInternalPage] = useState(1);
 
   const isControlledSearch = controlledSearch !== undefined;
-  const searchTerm = isControlledSearch ? controlledSearch : internalSearch;
+  const searchTerm = controlledSearch ?? internalSearch;
 
   const handleSearchChange = (query: string) => {
     if (!isControlledSearch) {
       setInternalSearch(query);
       setInternalPage(1);
     }
-    if (onSearch) {
-      onSearch(query);
-    }
+    onSearch?.(query);
   };
 
   const isControlledPagination = externalPage !== undefined;
@@ -64,12 +68,10 @@ export default function CommonTable<T>({
   const activePage = Math.min(Math.max(1, rawActivePage), totalPages);
 
   const handlePageChange = (page: number) => {
-    if (isControlledPagination) {
-      if (externalPageChange) externalPageChange(page);
-    } else {
+    if (!isControlledPagination) {
       setInternalPage(page);
-      if (externalPageChange) externalPageChange(page);
     }
+    externalPageChange?.(page);
   };
 
   // Local pagination if external totalRecords is not provided
@@ -87,7 +89,7 @@ export default function CommonTable<T>({
       {/* TOP: Search on left, Filters on right */}
       {(showSearch || filters) && (
         <div className="p-4 border-b border-[#E2E1EC] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {showSearch ? (
+          {showSearch && (
             <div className="w-full sm:w-72 md:w-80">
               <SearchInput
                 value={searchTerm}
@@ -95,12 +97,10 @@ export default function CommonTable<T>({
                 placeholder={searchPlaceholder}
               />
             </div>
-          ) : (
-            <div />
           )}
 
           {filters && (
-            <div className="flex flex-wrap items-center gap-2.5 justify-start sm:justify-end">
+            <div className={`flex flex-wrap items-center gap-2.5 justify-start sm:justify-end ${!showSearch ? 'sm:ml-auto' : ''}`}>
               {filters}
             </div>
           )}
@@ -113,13 +113,7 @@ export default function CommonTable<T>({
           <thead>
             <tr className="border-b border-[#E2E1EC] bg-[#F7F7FB] text-xs font-semibold text-[#5A586E] uppercase tracking-wider">
               {columns.map((col) => {
-                const alignClass =
-                  col.align === 'right'
-                    ? 'text-right'
-                    : col.align === 'center'
-                    ? 'text-center'
-                    : 'text-left';
-
+                const alignClass = ALIGN_MAP[col.align || 'left'];
                 const isStickyRight = col.sticky === 'right' || col.key === 'actions';
                 const stickyClass = isStickyRight
                   ? 'sticky right-0 z-20 bg-[#F7F7FB] shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)]'
@@ -170,19 +164,13 @@ export default function CommonTable<T>({
                 return (
                   <tr
                     key={String(rowKey)}
-                    onClick={() => onRowClick && onRowClick(row)}
+                    onClick={() => onRowClick?.(row)}
                     className={`h-13 group hover:bg-[#F7F7FB] transition-colors ${
                       onRowClick ? 'cursor-pointer' : ''
                     }`}
                   >
                     {columns.map((col) => {
-                      const alignClass =
-                        col.align === 'right'
-                          ? 'text-right'
-                          : col.align === 'center'
-                          ? 'text-center'
-                          : 'text-left';
-
+                      const alignClass = ALIGN_MAP[col.align || 'left'];
                       const isStickyRight = col.sticky === 'right' || col.key === 'actions';
                       const stickyClass = isStickyRight
                         ? 'sticky right-0 z-10 bg-white group-hover:bg-[#F7F7FB] shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)]'

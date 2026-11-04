@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
 interface CommonDrawerProps {
@@ -18,14 +18,17 @@ interface CommonDrawerProps {
   zIndex?: string;
 }
 
-// Global LIFO stack of open drawers (attached to window to survive HMR/Fast Refresh)
-interface DrawerStackEntry {
-  id: string;
-}
+const WIDTH_MAP: Record<NonNullable<CommonDrawerProps['width']>, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-xl',
+  xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
+};
 
-const getDrawerStack = (): DrawerStackEntry[] => {
+// Global LIFO stack of open drawer IDs (attached to window to survive HMR/Fast Refresh)
+const getDrawerStack = (): string[] => {
   if (typeof window === 'undefined') return [];
-  const win = window as unknown as { __COMMON_DRAWER_STACK__?: DrawerStackEntry[] };
+  const win = window as unknown as { __COMMON_DRAWER_STACK__?: string[] };
   if (!win.__COMMON_DRAWER_STACK__) {
     win.__COMMON_DRAWER_STACK__ = [];
   }
@@ -46,20 +49,16 @@ export default function CommonDrawer({
   width = 'lg',
   zIndex = 'z-50',
 }: CommonDrawerProps) {
-  const drawerId = React.useId();
-  const onCloseRef = React.useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const drawerId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return;
 
     const stack = getDrawerStack();
-    const existingIdx = stack.findIndex((d) => d.id === drawerId);
-    if (existingIdx === -1) {
-      stack.push({ id: drawerId });
+    if (!stack.includes(drawerId)) {
+      stack.push(drawerId);
     }
 
     document.body.style.overflow = 'hidden';
@@ -67,8 +66,8 @@ export default function CommonDrawer({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         const currentStack = getDrawerStack();
-        const topDrawer = currentStack[currentStack.length - 1];
-        if (topDrawer && topDrawer.id === drawerId) {
+        const topDrawerId = currentStack[currentStack.length - 1];
+        if (topDrawerId === drawerId) {
           e.preventDefault();
           e.stopPropagation();
           onCloseRef.current();
@@ -81,7 +80,7 @@ export default function CommonDrawer({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       const currentStack = getDrawerStack();
-      const idx = currentStack.findIndex((d) => d.id === drawerId);
+      const idx = currentStack.indexOf(drawerId);
       if (idx !== -1) {
         currentStack.splice(idx, 1);
       }
@@ -93,12 +92,7 @@ export default function CommonDrawer({
 
   if (!isOpen) return null;
 
-  const widthClasses = {
-    md: 'max-w-md',
-    lg: 'max-w-xl',
-    xl: 'max-w-2xl',
-    '2xl': 'max-w-4xl',
-  }[width] || 'max-w-xl';
+  const widthClass = (width && WIDTH_MAP[width]) || WIDTH_MAP.lg;
 
   return (
     <div
@@ -115,7 +109,7 @@ export default function CommonDrawer({
 
       <div className="fixed inset-y-0 right-0 flex pl-10 max-w-full">
         <div
-          className={`w-screen ${widthClasses} bg-white shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-right duration-200`}
+          className={`w-screen ${widthClass} bg-white shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-right duration-200`}
         >
           {/* Header */}
           <div className="px-6 py-5 border-b border-[#E2E1EC] bg-[#FFFFFF] flex items-start justify-between gap-4 shrink-0">

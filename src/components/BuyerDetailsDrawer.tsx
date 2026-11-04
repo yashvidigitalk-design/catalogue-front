@@ -1,11 +1,9 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { Building2, Mail, Phone, MapPin, Calendar, Tag, Edit2 } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import { InputField } from '@/components/FormControls';
 import { Buyer } from '@/types';
-
 interface BuyerDetailsDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -22,7 +20,7 @@ export default function BuyerDetailsDrawer({
   onSaveRate,
 }: BuyerDetailsDrawerProps) {
   const [drawerMode, setDrawerMode] = useState<'view' | 'edit'>(initialMode);
-  const [drawerCustomRate, setDrawerCustomRate] = useState<string>('');
+  const [drawerCustomRate, setDrawerCustomRate] = useState('');
   const [useDefaultRate, setUseDefaultRate] = useState(false);
 
   useEffect(() => {
@@ -36,27 +34,17 @@ export default function BuyerDetailsDrawer({
   if (!buyer) return null;
 
   const handleSaveDrawerRate = () => {
-    const rateNum =
-      !useDefaultRate && drawerCustomRate.trim() !== ''
-        ? Number(drawerCustomRate)
-        : null;
-    const newRate = rateNum && rateNum > 0 ? rateNum : undefined;
-
-    if (onSaveRate) {
-      onSaveRate(buyer.id, newRate);
-    }
+    const val = Number(drawerCustomRate);
+    onSaveRate?.(buyer.id, !useDefaultRate && val > 0 ? val : undefined);
     onClose();
   };
+
+  const hasCustomRate = Boolean(buyer.customRate && buyer.customRate > 0);
 
   const contactDetails = [
     { label: 'Email Address', value: buyer.email, icon: Mail, isTabular: false },
     { label: 'Phone Number', value: buyer.phone, icon: Phone, isTabular: true },
-    {
-      label: 'City & State',
-      value: `${buyer.city}${buyer.state ? `, ${buyer.state}` : ''}`,
-      icon: MapPin,
-      isTabular: false,
-    },
+    { label: 'City & State', value: `${buyer.city}${buyer.state ? `, ${buyer.state}` : ''}`, icon: MapPin, isTabular: false },
     { label: 'Registration Date', value: buyer.registrationDate, icon: Calendar, isTabular: true },
   ];
 
@@ -83,12 +71,7 @@ export default function BuyerDetailsDrawer({
               buyer.avatarColor || 'bg-[#EEF2FF] text-[#4E45D5]'
             }`}
           >
-            {buyer.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .substring(0, 2)
-              .toUpperCase()}
+            {buyer.name.slice(0, 2).toUpperCase()}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -140,14 +123,8 @@ export default function BuyerDetailsDrawer({
             {drawerMode === 'view' && (
               <button
                 type="button"
-                onClick={() => {
-                  setDrawerMode('edit');
-                  setDrawerCustomRate(
-                    buyer.customRate != null ? String(buyer.customRate) : ''
-                  );
-                  setUseDefaultRate(buyer.customRate == null);
-                }}
-                className="text-xs font-semibold text-[#4E45D5] hover:underline inline-flex items-center gap-1"
+                onClick={() => setDrawerMode('edit')}
+                className="text-xs font-semibold text-[#4E45D5] hover:underline inline-flex items-center gap-1 cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" /> Edit Rate
               </button>
@@ -159,9 +136,9 @@ export default function BuyerDetailsDrawer({
             <div className="p-4 rounded-xl bg-[#F7F7FB] border border-[#E2E1EC] space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#5A586E]">Current Rate Plan:</span>
-                {buyer.customRate != null && buyer.customRate > 0 ? (
+                {hasCustomRate ? (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-[#EEF2FF] text-[#4E45D5] border border-[#C7D2FE]">
-                    Custom Rate: ₹{buyer.customRate.toLocaleString('en-IN')} / m
+                    Custom Rate: ₹{buyer.customRate?.toLocaleString('en-IN')} / m
                   </span>
                 ) : (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]">
@@ -171,7 +148,7 @@ export default function BuyerDetailsDrawer({
               </div>
 
               <div className="text-xs text-[#5A586E] leading-relaxed pt-2 border-t border-[#E2E1EC]/60">
-                {buyer.customRate != null && buyer.customRate > 0 ? (
+                {hasCustomRate ? (
                   <>
                     This buyer enjoys a negotiated flat wholesale rate of{' '}
                     <span className="font-bold text-[#100E26]">
@@ -202,9 +179,7 @@ export default function BuyerDetailsDrawer({
                     checked={useDefaultRate}
                     onChange={(e) => {
                       setUseDefaultRate(e.target.checked);
-                      if (e.target.checked) {
-                        setDrawerCustomRate('');
-                      }
+                      if (e.target.checked) setDrawerCustomRate('');
                     }}
                     className="w-4 h-4 rounded text-[#4E45D5] focus:ring-[#4E45D5]"
                   />
@@ -217,11 +192,7 @@ export default function BuyerDetailsDrawer({
                       label="Buyer-Specific Custom Rate (₹ / meter)"
                       type="number"
                       min="0"
-                      prefixIcon={
-                        <span className="text-sm font-semibold text-[#5A586E]">
-                          ₹
-                        </span>
-                      }
+                      prefixIcon={<span className="text-sm font-semibold text-[#5A586E]">₹</span>}
                       value={drawerCustomRate}
                       onChange={(e) => setDrawerCustomRate(e.target.value)}
                       placeholder="e.g. 850"

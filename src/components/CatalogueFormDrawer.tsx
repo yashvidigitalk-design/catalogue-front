@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, X, Package } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import ProductSelectionDrawer from '@/components/ProductSelectionDrawer';
@@ -31,35 +31,20 @@ export default function CatalogueFormDrawer({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
-  const [prevOpen, setPrevOpen] = useState(false);
-  const [prevCat, setPrevCat] = useState<Catalogue | null | undefined>(undefined);
-
-  if (open !== prevOpen || catalogue !== prevCat) {
-    setPrevOpen(open);
-    setPrevCat(catalogue);
-    if (catalogue) {
-      setName(catalogue.name || '');
-      setDescription(catalogue.description || '');
-      setStatus(catalogue.status || 'active');
-      const initialProds = INITIAL_PRODUCTS.filter((p) =>
-        catalogue.productIds?.includes(p.id)
+  useEffect(() => {
+    if (open) {
+      setName(catalogue?.name || '');
+      setDescription(catalogue?.description || '');
+      setStatus(catalogue?.status || 'active');
+      setSelectedProducts(
+        catalogue ? INITIAL_PRODUCTS.filter((p) => catalogue.productIds?.includes(p.id)) : []
       );
-      setSelectedProducts(initialProds);
-    } else {
-      setName('');
-      setDescription('');
-      setStatus('active');
-      setSelectedProducts([]);
+      setErrors({});
     }
-    setErrors({});
-  }
+  }, [open, catalogue]);
 
   const handleRemoveProduct = (productId: string) => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
-
-  const handleAddSelectedProducts = (prods: Product[]) => {
-    setSelectedProducts(prods);
   };
 
   const handleSave = () => {
@@ -79,7 +64,7 @@ export default function CatalogueFormDrawer({
     };
 
     showToast('success', catalogue ? 'Catalogue updated' : 'Catalogue saved');
-    if (onSaved) onSaved(payload);
+    onSaved?.(payload);
     onClose();
   };
 
@@ -127,28 +112,24 @@ export default function CatalogueFormDrawer({
               Status
             </label>
             <div className="flex items-center gap-4 h-10">
-              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-[#100E26]">
-                <input
-                  type="radio"
-                  name="catalogue-status"
-                  value="active"
-                  checked={status === 'active'}
-                  onChange={() => setStatus('active')}
-                  className="w-4 h-4 text-[#4E45D5] focus:ring-[#4E45D5]"
-                />
-                Active
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-[#5A586E]">
-                <input
-                  type="radio"
-                  name="catalogue-status"
-                  value="inactive"
-                  checked={status === 'inactive'}
-                  onChange={() => setStatus('inactive')}
-                  className="w-4 h-4 text-[#4E45D5] focus:ring-[#4E45D5]"
-                />
-                Inactive
-              </label>
+              {(['active', 'inactive'] as const).map((s) => (
+                <label
+                  key={s}
+                  className={`flex items-center gap-2 cursor-pointer text-sm font-medium ${
+                    s === 'active' ? 'text-[#100E26]' : 'text-[#5A586E]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="catalogue-status"
+                    value={s}
+                    checked={status === s}
+                    onChange={() => setStatus(s)}
+                    className="w-4 h-4 text-[#4E45D5] focus:ring-[#4E45D5]"
+                  />
+                  <span className="capitalize">{s}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -218,7 +199,7 @@ export default function CatalogueFormDrawer({
                             {p.name}
                           </h4>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-semibold text-[#4E45D5] bg-[#EEF2FF] px-1.5 py-0.2 rounded border border-[#C7D2FE] font-tabular">
+                            <span className="text-[10px] font-semibold text-[#4E45D5] bg-[#EEF2FF] px-1.5 py-0.5 rounded border border-[#C7D2FE] font-tabular">
                               {p.designNumber}
                             </span>
                             <span className="text-xs font-bold text-[#100E26] font-tabular">
@@ -251,7 +232,7 @@ export default function CatalogueFormDrawer({
         open={isSelectionOpen}
         onClose={() => setIsSelectionOpen(false)}
         initialSelectedProductIds={selectedProducts.map((p) => p.id)}
-        onAddSelected={handleAddSelectedProducts}
+        onAddSelected={setSelectedProducts}
       />
     </>
   );

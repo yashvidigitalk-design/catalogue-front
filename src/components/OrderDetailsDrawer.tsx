@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import CommonDrawer from '@/components/CommonDrawer';
 import StatusBadge from '@/components/StatusBadge';
-import { Order } from '@/types';
+import { Order, StatusVariant } from '@/types';
 
 interface OrderDetailsDrawerProps {
   open: boolean;
@@ -22,6 +22,12 @@ interface OrderDetailsDrawerProps {
   onAccept?: (order: Order) => void;
   onReject?: (order: Order) => void;
 }
+
+const STATUS_VARIANT_MAP: Record<Order['status'], StatusVariant> = {
+  accepted: 'green',
+  rejected: 'red',
+  pending: 'amber',
+};
 
 export default function OrderDetailsDrawer({
   open,
@@ -33,21 +39,13 @@ export default function OrderDetailsDrawer({
   if (!order) return null;
 
   const isPending = order.status === 'pending';
-
-  const statusVariant =
-    order.status === 'accepted'
-      ? 'green'
-      : order.status === 'rejected'
-      ? 'red'
-      : 'amber';
+  const statusVariant = STATUS_VARIANT_MAP[order.status] || 'amber';
 
   const footerActions = isPending ? (
     <div className="flex items-center gap-2">
       <button
         type="button"
-        onClick={() => {
-          if (onReject) onReject(order);
-        }}
+        onClick={() => onReject?.(order)}
         className="h-10 px-4 rounded-lg border border-[#E11D48] text-[#E11D48] hover:bg-[#FFF1F2] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
       >
         <X className="w-3.5 h-3.5" />
@@ -56,9 +54,7 @@ export default function OrderDetailsDrawer({
 
       <button
         type="button"
-        onClick={() => {
-          if (onAccept) onAccept(order);
-        }}
+        onClick={() => onAccept?.(order)}
         className="h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs"
       >
         <Check className="w-3.5 h-3.5" />
@@ -229,4 +225,3 @@ export default function OrderDetailsDrawer({
     </CommonDrawer>
   );
 }
-

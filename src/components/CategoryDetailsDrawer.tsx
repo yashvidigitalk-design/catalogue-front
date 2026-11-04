@@ -29,9 +29,9 @@ export default function CategoryDetailsDrawer({
     const directMatches = INITIAL_PRODUCTS.filter(
       (p) => p.category?.toLowerCase() === category.name.toLowerCase()
     );
-    // If no exact match, use products starting with same prefix or first 6 products as sample showcase
+    // If no exact match, use products starting with same prefix or initial products as sample showcase
     if (directMatches.length > 0) return directMatches;
-    return INITIAL_PRODUCTS.slice(0, 6);
+    return INITIAL_PRODUCTS;
   }, [category]);
 
   // Filtered by search inside the drawer (backend handles search; frontend does not filter)
@@ -101,39 +101,22 @@ export default function CategoryDetailsDrawer({
       header: 'Stock Status',
       width: '115px',
       render: (p) => {
-        const isOutOfStock = p.stock === 0;
-        const isLowStock = p.stock > 0 && p.stock <= 10;
-        const statusText = isOutOfStock
-          ? 'Out of Stock'
-          : isLowStock
-          ? 'Low Stock'
-          : 'In Stock';
-        const colorClass = isOutOfStock
-          ? 'text-[#E11D48]'
-          : isLowStock
-          ? 'text-[#D97706]'
-          : 'text-[#059669]';
-        const dotBgClass = isOutOfStock
-          ? 'bg-[#E11D48]'
-          : isLowStock
-          ? 'bg-[#D97706]'
-          : 'bg-[#059669]';
+        const { text, color, dot } =
+          p.stock === 0
+            ? { text: 'Out of Stock', color: 'text-[#E11D48]', dot: 'bg-[#E11D48]' }
+            : p.stock <= 10
+            ? { text: 'Low Stock', color: 'text-[#D97706]', dot: 'bg-[#D97706]' }
+            : { text: 'In Stock', color: 'text-[#059669]', dot: 'bg-[#059669]' };
 
         return (
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${colorClass}`}>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotBgClass}`} />
-            <span>{statusText}</span>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+            <span>{text}</span>
           </span>
         );
       },
     },
   ];
-
-  const handleEditClick = () => {
-    if (onEdit) {
-      onEdit(category);
-    }
-  };
 
   return (
     <CommonDrawer
@@ -148,16 +131,14 @@ export default function CategoryDetailsDrawer({
       width="2xl"
       footerActions={
         onEdit ? (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleEditClick}
-              className="h-10 px-4 rounded-lg bg-[#4E45D5] hover:bg-[#6860EF] text-white text-sm font-medium transition-colors inline-flex items-center gap-2 shadow-sm"
-            >
-              <Edit2 className="w-4 h-4" />
-              <span>Edit Category</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => onEdit(category)}
+            className="h-10 px-4 rounded-lg bg-[#4E45D5] hover:bg-[#6860EF] text-white text-sm font-medium transition-colors inline-flex items-center gap-2 shadow-sm"
+          >
+            <Edit2 className="w-4 h-4" />
+            <span>Edit Category</span>
+          </button>
         ) : undefined
       }
     >
@@ -194,16 +175,11 @@ export default function CategoryDetailsDrawer({
                   }`}
                 >
                   {category.visibleOnStorefront ? (
-                    <>
-                      <Globe className="w-3 h-3" />
-                      <span>Storefront: Visible</span>
-                    </>
+                    <Globe className="w-3 h-3" />
                   ) : (
-                    <>
-                      <EyeOff className="w-3 h-3" />
-                      <span>Storefront: Hidden</span>
-                    </>
+                    <EyeOff className="w-3 h-3" />
                   )}
+                  <span>Storefront: {category.visibleOnStorefront ? 'Visible' : 'Hidden'}</span>
                 </span>
               </div>
 
@@ -253,10 +229,8 @@ export default function CategoryDetailsDrawer({
 
         {/* Attached Products Table with Search (matching Catalogue Details) */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#5A586E]">
-              Products in this Category ({categoryProducts.length})
-            </div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#5A586E]">
+            Products in this Category ({categoryProducts.length})
           </div>
 
           <CommonTable

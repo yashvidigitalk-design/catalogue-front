@@ -3,6 +3,7 @@ import { Plan, Language, UserProfile } from '@/types';
 export const CURRENT_SELLER: UserProfile = {
   name: 'Rajesh Varma',
   businessName: 'Rajesh Varma Textiles',
+  email: 'rajesh.varma@textiles.com',
   city: 'Surat',
   state: 'Gujarat',
   role: 'Master Manufacturer & Wholesaler',

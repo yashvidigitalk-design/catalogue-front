@@ -7,6 +7,12 @@ import React, {
   useMemo,
   forwardRef,
   useId,
+  type ReactNode,
+  type InputHTMLAttributes,
+  type TextareaHTMLAttributes,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import { ChevronDown, Check, X, AlertCircle } from 'lucide-react';
 
@@ -18,19 +24,19 @@ export interface SelectOption {
   label: string;
   value: string;
   sublabel?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   disabled?: boolean;
 }
 
 export interface InputFieldProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   required?: boolean;
   error?: string;
   helperText?: string;
-  prefixIcon?: React.ReactNode;
-  suffixIcon?: React.ReactNode;
-  suffix?: React.ReactNode;
+  prefixIcon?: ReactNode;
+  suffixIcon?: ReactNode;
+  suffix?: ReactNode;
   containerClassName?: string;
 }
 
@@ -47,17 +53,36 @@ export interface SearchableSelectProps {
   className?: string;
   containerClassName?: string;
   id?: string;
-  prefixIcon?: React.ReactNode;
+  prefixIcon?: ReactNode;
   allowClear?: boolean;
 }
 
 export interface TextareaFieldProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   required?: boolean;
   error?: string;
   helperText?: string;
   containerClassName?: string;
+}
+
+/* ==========================================================================
+   Internal Shared Field Message (Error / Helper Text)
+   ========================================================================== */
+
+function FieldMessage({ error, helperText }: { error?: string; helperText?: string }) {
+  if (error) {
+    return (
+      <p className="text-xs text-[#E11D48] mt-1 flex items-center gap-1">
+        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+        <span>{error}</span>
+      </p>
+    );
+  }
+  if (helperText) {
+    return <p className="text-[11px] text-[#5A586E] mt-1">{helperText}</p>;
+  }
+  return null;
 }
 
 /* ==========================================================================
@@ -84,11 +109,10 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ) => {
     const generatedId = useId();
     const inputId = id || generatedId;
-
     const hasCustomWidth = containerClassName.includes('w-');
 
     return (
-      <div className={`${hasCustomWidth ? '' : 'w-full'} ${containerClassName}`}>
+      <div className={`${hasCustomWidth ? '' : 'w-full '} ${containerClassName}`}>
         {label && (
           <label
             htmlFor={inputId}
@@ -111,11 +135,6 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             disabled={disabled}
             spellCheck={rest.spellCheck ?? false}
             autoCorrect={rest.autoCorrect ?? 'off'}
-            style={{
-              paddingLeft: prefixIcon && !className.includes('pl-') ? '2.125rem' : undefined,
-              paddingRight: (suffixIcon || suffix) && !className.includes('pr-') ? '2.25rem' : undefined,
-              ...rest.style,
-            }}
             className={`input-base ${
               prefixIcon ? (className.includes('pl-') ? '' : '!pl-[34px]') : ''
             } ${
@@ -139,14 +158,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           )}
         </div>
 
-        {error ? (
-          <p className="text-xs text-[#E11D48] mt-1 flex items-center gap-1">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>{error}</span>
-          </p>
-        ) : helperText ? (
-          <p className="text-[11px] text-[#5A586E] mt-1">{helperText}</p>
-        ) : null}
+        <FieldMessage error={error} helperText={helperText} />
       </div>
     );
   }
@@ -195,30 +207,30 @@ export function SearchableSelect({
 
   const selectedOption = normalizedOptions.find((opt) => opt.value === value);
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside (only active when dropdown is open)
   useEffect(() => {
+    if (!isOpen) return;
+
     function handleClickOutside(event: MouseEvent) {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        if (isOpen) {
-          if (isTyping && typedText.trim()) {
-            const query = typedText.toLowerCase().trim();
-            const exactMatch = normalizedOptions.find(
-              (opt) =>
-                opt.label.toLowerCase() === query ||
-                opt.value.toLowerCase() === query
-            );
-            if (exactMatch) {
-              onChange(exactMatch.value);
-            }
+        if (isTyping && typedText.trim()) {
+          const query = typedText.toLowerCase().trim();
+          const exactMatch = normalizedOptions.find(
+            (opt) =>
+              opt.label.toLowerCase() === query ||
+              opt.value.toLowerCase() === query
+          );
+          if (exactMatch) {
+            onChange(exactMatch.value);
           }
-          setIsOpen(false);
-          setIsTyping(false);
-          setTypedText('');
-          setHighlightedIndex(-1);
         }
+        setIsOpen(false);
+        setIsTyping(false);
+        setTypedText('');
+        setHighlightedIndex(-1);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -254,7 +266,7 @@ export function SearchableSelect({
     setHighlightedIndex(-1);
   };
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = (e: ReactMouseEvent) => {
     e.stopPropagation();
     onChange('');
     setIsTyping(false);
@@ -263,7 +275,7 @@ export function SearchableSelect({
     inputRef.current?.focus();
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setIsTyping(true);
     setTypedText(val);
@@ -271,16 +283,7 @@ export function SearchableSelect({
     setHighlightedIndex(0);
   };
 
-  const handleInputFocus = () => {
-    if (!disabled) {
-      setIsOpen(true);
-      setIsTyping(false);
-      setTypedText('');
-      setHighlightedIndex(-1);
-    }
-  };
-
-  const handleInputClick = () => {
+  const openAndReset = () => {
     if (!disabled && !isOpen) {
       setIsOpen(true);
       setIsTyping(false);
@@ -289,7 +292,7 @@ export function SearchableSelect({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (!isOpen) {
@@ -345,9 +348,7 @@ export function SearchableSelect({
   // What is displayed in the input
   const inputValue = isTyping
     ? typedText
-    : selectedOption
-    ? selectedOption.label
-    : '';
+    : (selectedOption?.label ?? '');
 
   return (
     <div
@@ -384,14 +385,10 @@ export function SearchableSelect({
           disabled={disabled}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onClick={handleInputClick}
+          onFocus={openAndReset}
+          onClick={openAndReset}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          style={{
-            paddingLeft: prefixIcon && !className.includes('pl-') ? '2.125rem' : undefined,
-            paddingRight: (allowClear || isTyping) && (value || typedText) ? '3.5rem' : '2.25rem',
-          }}
           className={`input-base cursor-text ${
             prefixIcon ? (className.includes('pl-') ? '' : '!pl-[34px]') : ''
           } ${
@@ -430,13 +427,11 @@ export function SearchableSelect({
             tabIndex={-1}
             disabled={disabled}
             onClick={() => {
-              if (!disabled) {
-                if (isOpen) {
-                  setIsOpen(false);
-                  setIsTyping(false);
-                } else {
-                  inputRef.current?.focus();
-                }
+              if (isOpen) {
+                setIsOpen(false);
+                setIsTyping(false);
+              } else {
+                inputRef.current?.focus();
               }
             }}
             className="p-1 rounded-md text-[#9493A8] hover:text-[#100E26] transition-colors focus:outline-none"
@@ -509,14 +504,7 @@ export function SearchableSelect({
         </div>
       )}
 
-      {error ? (
-        <p className="text-xs text-[#E11D48] mt-1 flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-          <span>{error}</span>
-        </p>
-      ) : helperText ? (
-        <p className="text-[11px] text-[#5A586E] mt-1">{helperText}</p>
-      ) : null}
+      <FieldMessage error={error} helperText={helperText} />
     </div>
   );
 }
@@ -574,17 +562,9 @@ export const TextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>
           {...rest}
         />
 
-        {error ? (
-          <p className="text-xs text-[#E11D48] mt-1 flex items-center gap-1">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>{error}</span>
-          </p>
-        ) : helperText ? (
-          <p className="text-[11px] text-[#5A586E] mt-1">{helperText}</p>
-        ) : null}
+        <FieldMessage error={error} helperText={helperText} />
       </div>
     );
   }
 );
 TextareaField.displayName = 'TextareaField';
-

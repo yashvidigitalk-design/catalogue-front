@@ -27,7 +27,7 @@ export default function ImageUpload({
 
   const updateImages = (newImages: string[]) => {
     setImages(newImages);
-    if (onChange) onChange(newImages);
+    onChange?.(newImages);
   };
 
   const handleFiles = (files: FileList | null) => {
@@ -44,13 +44,11 @@ export default function ImageUpload({
   const handleRemove = (indexToRemove: number) => {
     const updated = images.filter((_, idx) => idx !== indexToRemove);
     updateImages(updated);
-    if (primaryIndex >= updated.length) {
-      setPrimaryIndex(Math.max(0, updated.length - 1));
+    if (primaryIndex === indexToRemove) {
+      setPrimaryIndex(0);
+    } else if (primaryIndex > indexToRemove) {
+      setPrimaryIndex((prev) => prev - 1);
     }
-  };
-
-  const handleSetPrimary = (index: number) => {
-    setPrimaryIndex(index);
   };
 
   return (
@@ -94,7 +92,10 @@ export default function ImageUpload({
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={(e) => {
+            handleFiles(e.target.files);
+            e.target.value = '';
+          }}
         />
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="w-10 h-10 rounded-full bg-[#EEF2FF] text-[#4E45D5] flex items-center justify-center">
@@ -137,7 +138,7 @@ export default function ImageUpload({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSetPrimary(idx);
+                      setPrimaryIndex(idx);
                     }}
                     className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 bg-black/60 hover:bg-[#4E45D5] text-white text-[10px] font-medium px-1.5 py-0.5 rounded transition-all shadow"
                     title="Set as primary fabric swatch"
@@ -154,7 +155,7 @@ export default function ImageUpload({
                       e.stopPropagation();
                       handleRemove(idx);
                     }}
-                    className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 shadow transition-colors"
+                    className="w-6 h-6 rounded-full bg-[#E11D48] text-white flex items-center justify-center hover:bg-[#BE123C] shadow transition-colors"
                     title="Remove image"
                   >
                     <X className="w-3.5 h-3.5" />

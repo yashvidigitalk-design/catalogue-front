@@ -26,9 +26,7 @@ export default function InquiryDetailsDrawer({
   const isSolved = inquiry.status === 'solved';
 
   const handleMarkAsSolved = () => {
-    if (onMarkSolved) {
-      onMarkSolved(inquiry.id);
-    }
+    onMarkSolved?.(inquiry.id);
     showToast('success', 'Inquiry marked as solved');
     onClose();
   };
@@ -148,8 +146,8 @@ export default function InquiryDetailsDrawer({
             </div>
 
             <StatusBadge
-              label={inquiry.status === 'solved' ? 'Solved' : 'New'}
-              variant={inquiry.status === 'solved' ? 'green' : 'blue'}
+              label={isSolved ? 'Solved' : 'New'}
+              variant={isSolved ? 'green' : 'blue'}
               size="sm"
             />
           </div>
@@ -188,4 +186,3 @@ export default function InquiryDetailsDrawer({
     </CommonDrawer>
   );
 }
-

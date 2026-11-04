@@ -19,6 +19,7 @@ export interface Language {
 export interface UserProfile {
   name: string;
   businessName: string;
+  email?: string;
   city: string;
   state: string;
   role: string;

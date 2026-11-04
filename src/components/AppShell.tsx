@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Toast from '@/components/Toast';
@@ -8,6 +9,18 @@ import Toast from '@/components/Toast';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isAuthPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login');
+
+  if (isAuthPage) {
+    return (
+      <div className="min-h-screen bg-[#F7F7FB] text-[#100E26]">
+        {children}
+        <Toast />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">

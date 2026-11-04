@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { ChevronDown, Check, Filter } from 'lucide-react';
 import { FilterOption } from '@/types';
 
@@ -9,7 +9,7 @@ interface FilterDropdownProps {
   options: FilterOption[];
   selected: string;
   onSelect: (value: string) => void;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   className?: string;
   placeholder?: string;
 }
@@ -27,24 +27,26 @@ export default function FilterDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   const selectedOption = options.find((opt) => opt.value === selected);
-  const displayLabel = selectedOption ? selectedOption.label : placeholder;
-  const isFiltered = Boolean(selected && selected !== 'all' && selected !== '');
+  const displayLabel = selectedOption?.label || placeholder;
+  const isFiltered = Boolean(selected && selected !== 'all');
 
   return (
     <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className={`h-10 px-3.5 inline-flex items-center gap-2 border rounded-lg text-sm font-medium transition-all ${
           isFiltered
             ? 'border-[#4E45D5] bg-[#EEF2FF] text-[#4E45D5]'

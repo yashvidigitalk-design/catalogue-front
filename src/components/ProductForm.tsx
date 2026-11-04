@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   UploadCloud,
@@ -44,6 +44,70 @@ const STOCK_UNITS: StockUnit[] = ['Piece', 'Meter', 'Roll', 'Bale', 'Kg'];
 const WEIGHT_UNITS: WeightUnit[] = ['Gram', 'Kg'];
 const TAX_RATES: TaxRate[] = ['0%', '5%', '12%', '18%', '28%'];
 
+const getYouTubeVideoId = (url: string) => {
+  const match = url.match(
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+  );
+  return match ? match[1] : null;
+};
+
+function extractProductFormData(initialProduct?: Product | null) {
+  const defaultRanges: InternalRange[] =
+    initialProduct?.pricingRanges && initialProduct.pricingRanges.length > 0
+      ? initialProduct.pricingRanges.map((r, idx) => ({
+          id: String(idx + 1),
+          min: r.min,
+          max: r.max !== null && r.max !== undefined ? r.max : '',
+          price: r.price,
+        }))
+      : [
+          {
+            id: '1',
+            min: 1,
+            max: '',
+            price: initialProduct?.wholesalePrice ?? '',
+          },
+        ];
+
+  return {
+    name: initialProduct?.name || '',
+    designNumber: initialProduct?.designNumber || '',
+    sku:
+      initialProduct?.sku ||
+      (initialProduct?.designNumber
+        ? `TEX-${initialProduct.designNumber.replace(/[^A-Za-z0-9]/g, '')}`
+        : ''),
+    category:
+      initialProduct?.category || INITIAL_CATEGORIES[0]?.name || 'Select Category',
+    description: initialProduct?.description || '',
+    fabric: initialProduct?.fabric || '',
+    stock: initialProduct?.stock !== undefined ? initialProduct.stock : '',
+    stockUnit:
+      (initialProduct?.stockUnit || (initialProduct?.unit as StockUnit) || '') as StockUnit | '',
+    moq: initialProduct?.moq !== undefined ? initialProduct.moq : '',
+    productWeight:
+      initialProduct?.productWeight ??
+      (initialProduct?.weight ? parseInt(initialProduct.weight) || '' : ''),
+    weightUnit: (initialProduct?.weightUnit ||
+      (initialProduct?.weight?.toLowerCase().includes('kg') ? 'Kg' : 'Gram')) as WeightUnit,
+    color: initialProduct?.color || '',
+    colorHex: initialProduct?.colorHex || '#4E45D5',
+    tax: (initialProduct?.tax || '') as TaxRate | '',
+    taxType: (initialProduct?.taxType || 'GST Exclusive') as TaxType,
+    images: initialProduct?.images?.length
+      ? initialProduct.images.slice(0, 4)
+      : initialProduct?.image
+      ? [initialProduct.image]
+      : [],
+    videoYoutubeUrl: initialProduct?.video?.url || '',
+    pricingUnit: (initialProduct?.pricingUnit ||
+      initialProduct?.stockUnit ||
+      (initialProduct?.unit as StockUnit) ||
+      '') as StockUnit | '',
+    ranges: defaultRanges,
+  };
+}
+
 const YouTubeIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -60,93 +124,46 @@ export default function ProductForm({
   const router = useRouter();
   const { showToast } = useToast();
 
+  const initialData = useRef(extractProductFormData(initialProduct)).current;
+
   // Section 1: Basic Details
-  const [name, setName] = useState(initialProduct?.name || '');
-  const [designNumber, setDesignNumber] = useState(initialProduct?.designNumber || '');
-  const [sku, setSku] = useState(
-    initialProduct?.sku ||
-      (initialProduct?.designNumber
-        ? `TEX-${initialProduct.designNumber.replace(/[^A-Za-z0-9]/g, '')}`
-        : '')
-  );
-  const [category, setCategory] = useState(
-    initialProduct?.category || INITIAL_CATEGORIES[0]?.name || 'Select Category'
-  );
-  const [description, setDescription] = useState(initialProduct?.description || '');
-  const [fabric, setFabric] = useState(initialProduct?.fabric || '');
+  const [name, setName] = useState(initialData.name);
+  const [designNumber, setDesignNumber] = useState(initialData.designNumber);
+  const [sku, setSku] = useState(initialData.sku);
+  const [category, setCategory] = useState(initialData.category);
+  const [description, setDescription] = useState(initialData.description);
+  const [fabric, setFabric] = useState(initialData.fabric);
 
   // Section 2: Stock & Inventory (starts empty without pre-filled values)
-  const [stock, setStock] = useState<number | string>(
-    initialProduct?.stock !== undefined ? initialProduct.stock : ''
-  );
-  const [stockUnit, setStockUnit] = useState<StockUnit | ''>(
-    initialProduct?.stockUnit || (initialProduct?.unit as StockUnit) || ''
-  );
-  const [moq, setMoq] = useState<number | string>(
-    initialProduct?.moq !== undefined ? initialProduct.moq : ''
-  );
+  const [stock, setStock] = useState<number | string>(initialData.stock);
+  const [stockUnit, setStockUnit] = useState<StockUnit | ''>(initialData.stockUnit);
+  const [moq, setMoq] = useState<number | string>(initialData.moq);
 
   // Section 3: Product Specification
-  const [productWeight, setProductWeight] = useState<number | string>(
-    initialProduct?.productWeight ??
-      (initialProduct?.weight ? parseInt(initialProduct.weight) || '' : '')
-  );
-  const [weightUnit, setWeightUnit] = useState<WeightUnit>(
-    initialProduct?.weightUnit ||
-      (initialProduct?.weight?.toLowerCase().includes('kg') ? 'Kg' : 'Gram')
-  );
-  const [color, setColor] = useState(initialProduct?.color || '');
-  const [colorHex, setColorHex] = useState(initialProduct?.colorHex || '#4E45D5');
+  const [productWeight, setProductWeight] = useState<number | string>(initialData.productWeight);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>(initialData.weightUnit);
+  const [color, setColor] = useState(initialData.color);
+  const [colorHex, setColorHex] = useState(initialData.colorHex);
 
   // Section 4: Additional Settings (tax starts empty)
-  const [tax, setTax] = useState<TaxRate | ''>(initialProduct?.tax || '');
-  const [taxType, setTaxType] = useState<TaxType>(
-    initialProduct?.taxType || 'GST Exclusive'
-  );
+  const [tax, setTax] = useState<TaxRate | ''>(initialData.tax);
+  const [taxType, setTaxType] = useState<TaxType>(initialData.taxType);
 
   // Section 5: Media
-  const [images, setImages] = useState<string[]>(
-    initialProduct?.images?.length
-      ? initialProduct.images.slice(0, 4)
-      : initialProduct?.image
-      ? [initialProduct.image]
-      : []
-  );
+  const [images, setImages] = useState<string[]>(initialData.images);
   const [imageError, setImageError] = useState('');
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Video State (YouTube Link only)
-  const [videoYoutubeUrl, setVideoYoutubeUrl] = useState(
-    initialProduct?.video?.url || ''
+  const [videoYoutubeUrl, setVideoYoutubeUrl] = useState(initialData.videoYoutubeUrl);
+  const youtubeVideoId = useMemo(
+    () => getYouTubeVideoId(videoYoutubeUrl.trim()),
+    [videoYoutubeUrl]
   );
 
   // Section 6: Discount / Quantity-based Pricing
-  const [pricingUnit, setPricingUnit] = useState<StockUnit | ''>(
-    initialProduct?.pricingUnit ||
-      initialProduct?.stockUnit ||
-      (initialProduct?.unit as StockUnit) ||
-      ''
-  );
-
-  // First range default has empty max
-  const [ranges, setRanges] = useState<InternalRange[]>(() => {
-    if (initialProduct?.pricingRanges && initialProduct.pricingRanges.length > 0) {
-      return initialProduct.pricingRanges.map((r, idx) => ({
-        id: String(idx + 1),
-        min: r.min,
-        max: r.max !== null && r.max !== undefined ? r.max : '',
-        price: r.price,
-      }));
-    }
-    return [
-      {
-        id: '1',
-        min: 1,
-        max: '',
-        price: initialProduct?.wholesalePrice ?? '',
-      },
-    ];
-  });
+  const [pricingUnit, setPricingUnit] = useState<StockUnit | ''>(initialData.pricingUnit);
+  const [ranges, setRanges] = useState<InternalRange[]>(initialData.ranges);
 
   // Validation Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -164,69 +181,26 @@ export default function ProductForm({
   // Synchronize state if initialProduct changes dynamically
   useEffect(() => {
     if (initialProduct) {
-      setName(initialProduct.name || '');
-      setDesignNumber(initialProduct.designNumber || '');
-      setSku(
-        initialProduct.sku ||
-          (initialProduct.designNumber
-            ? `TEX-${initialProduct.designNumber.replace(/[^A-Za-z0-9]/g, '')}`
-            : '')
-      );
-      setCategory(initialProduct.category || INITIAL_CATEGORIES[0]?.name || 'Select Category');
-      setDescription(initialProduct.description || '');
-      setFabric(initialProduct.fabric || 'Textile Blend');
-      setStock(initialProduct.stock !== undefined ? initialProduct.stock : '');
-      setStockUnit(initialProduct.stockUnit || (initialProduct.unit as StockUnit) || '');
-      setMoq(initialProduct.moq !== undefined ? initialProduct.moq : '');
-      setProductWeight(
-        initialProduct.productWeight ??
-          (initialProduct.weight ? parseInt(initialProduct.weight) || '' : '')
-      );
-      setWeightUnit(
-        initialProduct.weightUnit ||
-          (initialProduct.weight?.toLowerCase().includes('kg') ? 'Kg' : 'Gram')
-      );
-      setColor(initialProduct.color || '');
-      setColorHex(initialProduct.colorHex || '#4E45D5');
-      setTax(initialProduct.tax || '');
-      setTaxType(initialProduct.taxType || 'GST Exclusive');
-      setImages(
-        initialProduct.images?.length
-          ? initialProduct.images.slice(0, 4)
-          : initialProduct.image
-          ? [initialProduct.image]
-          : []
-      );
-      if (initialProduct.video) {
-        setVideoYoutubeUrl(initialProduct.video.url || '');
-      } else {
-        setVideoYoutubeUrl('');
-      }
-      setPricingUnit(
-        initialProduct.pricingUnit ||
-          initialProduct.stockUnit ||
-          (initialProduct.unit as StockUnit) ||
-          ''
-      );
-      if (initialProduct.pricingRanges && initialProduct.pricingRanges.length > 0) {
-        setRanges(
-          initialProduct.pricingRanges.map((r, idx) => ({
-            id: String(idx + 1),
-            min: r.min,
-            max: r.max !== null && r.max !== undefined ? r.max : '',
-            price: r.price,
-          }))
-        );
-      } else {
-        setRanges([
-          {
-            id: '1',
-            min: 1,
-            max: '',
-            price: initialProduct.wholesalePrice ?? '',
-          },
-        ]);
-      }
+      const data = extractProductFormData(initialProduct);
+      setName(data.name);
+      setDesignNumber(data.designNumber);
+      setSku(data.sku);
+      setCategory(data.category);
+      setDescription(data.description);
+      setFabric(data.fabric);
+      setStock(data.stock);
+      setStockUnit(data.stockUnit);
+      setMoq(data.moq);
+      setProductWeight(data.productWeight);
+      setWeightUnit(data.weightUnit);
+      setColor(data.color);
+      setColorHex(data.colorHex);
+      setTax(data.tax);
+      setTaxType(data.taxType);
+      setImages(data.images);
+      setVideoYoutubeUrl(data.videoYoutubeUrl);
+      setPricingUnit(data.pricingUnit);
+      setRanges(data.ranges);
     }
   }, [initialProduct]);
 
@@ -270,14 +244,6 @@ export default function ProductForm({
   const handleRemoveVideo = () => {
     setVideoYoutubeUrl('');
     if (errors.video) setErrors((prev) => ({ ...prev, video: '' }));
-  };
-
-  // Helper for YouTube embed ID extraction
-  const getYouTubeVideoId = (url: string) => {
-    const match = url.match(
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-    );
-    return match ? match[1] : null;
   };
 
   // Quantity Ranges Handlers
@@ -333,6 +299,16 @@ export default function ProductForm({
     }
   };
 
+  const handleCancel = () => {
+    if (mode === 'page') {
+      router.push('/products');
+    } else if (onCancel) {
+      onCancel();
+    } else {
+      router.push('/products');
+    }
+  };
+
   // Main Submit & Validation
   const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
@@ -354,11 +330,8 @@ export default function ProductForm({
     }
 
     // Section 5 Video Validation (YouTube URL validation if entered)
-    if (videoYoutubeUrl.trim()) {
-      const ytId = getYouTubeVideoId(videoYoutubeUrl.trim());
-      if (!ytId) {
-        newErrors.video = 'Please enter a valid YouTube URL (e.g. https://youtu.be/...)';
-      }
+    if (videoYoutubeUrl.trim() && !youtubeVideoId) {
+      newErrors.video = 'Please enter a valid YouTube URL (e.g. https://youtu.be/...)';
     }
 
     // Section 6 Ranges Validation
@@ -467,27 +440,18 @@ export default function ProductForm({
 
     showToast('success', initialProduct ? 'Product updated successfully' : 'Product saved');
 
-    if (mode === 'page') {
-      router.push('/products');
-    } else if (onCancel) {
-      onCancel();
-    }
+    handleCancel();
   };
 
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      router.push('/products');
-    }
-  };
+  const handleSubmitRef = useRef(handleSubmit);
+  handleSubmitRef.current = handleSubmit;
 
   // Register submit function to parent drawer if provided
   useEffect(() => {
     if (onRegisterSubmit) {
-      onRegisterSubmit(handleSubmit);
+      onRegisterSubmit(() => handleSubmitRef.current());
     }
-  });
+  }, [onRegisterSubmit]);
 
   return (
     <form
@@ -670,10 +634,10 @@ export default function ProductForm({
                     error={errors.video}
                   />
 
-                  {getYouTubeVideoId(videoYoutubeUrl) && (
+                  {youtubeVideoId && (
                     <div className="relative aspect-video rounded-lg overflow-hidden border border-[#E2E1EC] bg-black mt-2">
                       <iframe
-                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(videoYoutubeUrl)}`}
+                        src={`https://www.youtube.com/embed/${youtubeVideoId}`}
                         title="YouTube video player"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
