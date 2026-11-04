@@ -11,7 +11,6 @@ export const STAT_CARDS_DATA = [
     value: '1,428',
     change: '+14.2%',
     changeType: 'positive' as const,
-    caption: 'vs last month',
     iconName: 'ShoppingBag',
   },
   {
@@ -19,7 +18,6 @@ export const STAT_CARDS_DATA = [
     value: '₹84,25,000',
     change: '+18.6%',
     changeType: 'positive' as const,
-    caption: 'vs last month',
     iconName: 'IndianRupee',
   },
   {
@@ -27,7 +25,6 @@ export const STAT_CARDS_DATA = [
     value: '142',
     change: '+8.4%',
     changeType: 'positive' as const,
-    caption: 'vs last month',
     iconName: 'Users',
   },
   {
@@ -35,7 +32,6 @@ export const STAT_CARDS_DATA = [
     value: '386',
     change: '-1.2%',
     changeType: 'negative' as const,
-    caption: 'vs last month',
     iconName: 'Package',
   },
 ];

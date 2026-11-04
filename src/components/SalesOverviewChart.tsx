@@ -123,32 +123,33 @@ export default function SalesOverviewChart() {
 
         {/* Highlight Metrics */}
         <div className="mt-4 pt-3 border-t border-[#F1F0F7] grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9493A8] block">
-              Peak Day Volume
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-[#100E26] font-tabular mt-0.5 block">
-              {activeData.metrics.peakVolume}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9493A8] block">
-              Avg Wholesale Lot
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-[#100E26] font-tabular mt-0.5 block">
-              {activeData.metrics.avgLot}
-            </span>
-          </div>
-
-          <div className="col-span-2 sm:col-span-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9493A8] block">
-              Payment Realized
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-[#059669] font-tabular mt-0.5 block">
-              {activeData.metrics.paymentRealized}
-            </span>
-          </div>
+          {[
+            {
+              label: 'Peak Day Volume',
+              value: activeData.metrics.peakVolume,
+              color: 'text-[#100E26]',
+            },
+            {
+              label: 'Avg Wholesale Lot',
+              value: activeData.metrics.avgLot,
+              color: 'text-[#100E26]',
+            },
+            {
+              label: 'Payment Realized',
+              value: activeData.metrics.paymentRealized,
+              color: 'text-[#059669]',
+              className: 'col-span-2 sm:col-span-1',
+            },
+          ].map((metric) => (
+            <div key={metric.label} className={metric.className}>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9493A8] block">
+                {metric.label}
+              </span>
+              <span className={`text-xs sm:text-sm font-bold ${metric.color} font-tabular mt-0.5 block`}>
+                {metric.value}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -295,8 +296,8 @@ export default function SalesOverviewChart() {
 
         {/* X-Axis Labels with Proper Top and Bottom Margin */}
         <div className="flex justify-between items-center px-1 pt-3 pb-1 text-[11px] font-medium text-[#9493A8] select-none">
-          {points.map((p, idx) => (
-            <span key={idx} className="truncate">
+          {points.map((p) => (
+            <span key={p.label} className="truncate">
               {p.label}
             </span>
           ))}

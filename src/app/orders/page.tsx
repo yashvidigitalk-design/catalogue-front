@@ -26,49 +26,33 @@ export default function OrdersPage() {
   // Orders Table Data (backend handles search & filter; frontend does not filter)
   const filteredOrders = ordersList;
 
-  const handleOpenAccept = (ord: Order) => {
+  const handleOpenAction = (ord: Order, type: 'accept' | 'reject') => {
     setTargetOrder(ord);
-    setActionType('accept');
+    setActionType(type);
     setIsModalOpen(true);
   };
-
-  const handleOpenReject = (ord: Order) => {
-    setTargetOrder(ord);
-    setActionType('reject');
-    setIsModalOpen(true);
+  const handleOpenAccept = (ord: Order) => handleOpenAction(ord, 'accept');
+  const handleOpenReject = (ord: Order) => handleOpenAction(ord, 'reject');
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTargetOrder(null);
   };
 
   const handleConfirmAction = (remark?: string) => {
     if (!targetOrder) return;
-
     const newStatus = actionType === 'accept' ? 'accepted' : 'rejected';
     const updatedRemark = remark?.trim() || undefined;
 
     setOrdersList((prev) =>
-      prev.map((o) =>
-        o.id === targetOrder.id
-          ? { ...o, status: newStatus, remark: updatedRemark }
-          : o
-      )
+      prev.map((o) => (o.id === targetOrder.id ? { ...o, status: newStatus, remark: updatedRemark } : o))
     );
 
-    // If drawer is viewing the same order, update viewingOrder state
-    if (viewingOrder && viewingOrder.id === targetOrder.id) {
-      setViewingOrder({
-        ...viewingOrder,
-        status: newStatus,
-        remark: updatedRemark,
-      });
+    if (viewingOrder?.id === targetOrder.id) {
+      setViewingOrder({ ...viewingOrder, status: newStatus, remark: updatedRemark });
     }
 
-    if (actionType === 'accept') {
-      showToast('success', 'Order accepted');
-    } else {
-      showToast('error', 'Order rejected');
-    }
-
-    setIsModalOpen(false);
-    setTargetOrder(null);
+    showToast(actionType === 'accept' ? 'success' : 'error', `Order ${newStatus}`);
+    handleCloseModal();
   };
 
   // CommonTable Columns (fits 1366px screen, Actions sticky right)
@@ -77,11 +61,7 @@ export default function OrdersPage() {
       key: 'id',
       header: 'Order ID',
       width: '100px',
-      render: (ord) => (
-        <span className="font-bold text-xs text-[#100E26] font-tabular">
-          {ord.id}
-        </span>
-      ),
+      render: (ord) => <span className="font-bold text-xs text-[#100E26] font-tabular">{ord.id}</span>,
     },
     {
       key: 'buyerName',
@@ -89,12 +69,8 @@ export default function OrdersPage() {
       width: '160px',
       render: (ord) => (
         <div className="max-w-[155px]">
-          <div className="font-semibold text-xs text-[#100E26] truncate" title={ord.buyerName}>
-            {ord.buyerName}
-          </div>
-          <div className="text-[11px] text-[#5A586E] truncate" title={ord.buyerCompany}>
-            {ord.buyerCompany}
-          </div>
+          <div className="font-semibold text-xs text-[#100E26] truncate" title={ord.buyerName}>{ord.buyerName}</div>
+          <div className="text-[11px] text-[#5A586E] truncate" title={ord.buyerCompany}>{ord.buyerCompany}</div>
         </div>
       ),
     },
@@ -102,11 +78,7 @@ export default function OrdersPage() {
       key: 'contactNumber',
       header: 'Contact No.',
       width: '130px',
-      render: (ord) => (
-        <span className="text-xs text-[#100E26] font-tabular whitespace-nowrap">
-          {ord.contactNumber}
-        </span>
-      ),
+      render: (ord) => <span className="text-xs text-[#100E26] font-tabular whitespace-nowrap">{ord.contactNumber}</span>,
     },
     {
       key: 'productName',
@@ -116,15 +88,9 @@ export default function OrdersPage() {
         <div className="flex items-center gap-2.5 max-w-[190px]">
           <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={ord.productImage}
-              alt={ord.productName}
-              className="w-full h-full object-cover"
-            />
+            <img src={ord.productImage} alt={ord.productName} className="w-full h-full object-cover" />
           </div>
-          <div className="font-semibold text-xs text-[#100E26] truncate" title={ord.productName}>
-            {ord.productName}
-          </div>
+          <div className="font-semibold text-xs text-[#100E26] truncate" title={ord.productName}>{ord.productName}</div>
         </div>
       ),
     },
@@ -142,61 +108,37 @@ export default function OrdersPage() {
       key: 'quantity',
       header: 'Quantity',
       width: '95px',
-      render: (ord) => (
-        <span className="font-semibold text-xs text-[#100E26] font-tabular whitespace-nowrap">
-          {ord.quantity.toLocaleString('en-IN')} m
-        </span>
-      ),
+      render: (ord) => <span className="font-semibold text-xs text-[#100E26] font-tabular whitespace-nowrap">{ord.quantity.toLocaleString('en-IN')} m</span>,
     },
     {
       key: 'unitPrice',
       header: 'Unit Price',
       width: '95px',
-      render: (ord) => (
-        <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">
-          ₹{ord.unitPrice.toLocaleString('en-IN')}/m
-        </span>
-      ),
+      render: (ord) => <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">₹{ord.unitPrice.toLocaleString('en-IN')}/m</span>,
     },
     {
       key: 'totalAmount',
       header: 'Total Amount',
       width: '115px',
-      render: (ord) => (
-        <span className="font-bold text-xs text-[#100E26] font-tabular whitespace-nowrap">
-          ₹{ord.totalAmount.toLocaleString('en-IN')}
-        </span>
-      ),
+      render: (ord) => <span className="font-bold text-xs text-[#100E26] font-tabular whitespace-nowrap">₹{ord.totalAmount.toLocaleString('en-IN')}</span>,
     },
     {
       key: 'orderDate',
       header: 'Order Date',
       width: '105px',
-      render: (ord) => (
-        <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">
-          {ord.orderDate}
-        </span>
-      ),
+      render: (ord) => <span className="text-xs text-[#5A586E] font-tabular whitespace-nowrap">{ord.orderDate}</span>,
     },
     {
       key: 'status',
       header: 'Status',
       width: '100px',
-      render: (ord) => {
-        const variant =
-          ord.status === 'accepted'
-            ? 'green'
-            : ord.status === 'rejected'
-            ? 'red'
-            : 'amber';
-        return (
-          <StatusBadge
-            label={ord.status.charAt(0).toUpperCase() + ord.status.slice(1)}
-            variant={variant}
-            size="sm"
-          />
-        );
-      },
+      render: (ord) => (
+        <StatusBadge
+          label={ord.status.charAt(0).toUpperCase() + ord.status.slice(1)}
+          variant={ord.status === 'accepted' ? 'green' : ord.status === 'rejected' ? 'red' : 'amber'}
+          size="sm"
+        />
+      ),
     },
     {
       key: 'actions',
@@ -247,6 +189,8 @@ export default function OrdersPage() {
     },
   ];
 
+  const isAccept = actionType === 'accept';
+
   return (
     <div className="space-y-6">
       {/* PageHeader: Title, short description, no action button */}
@@ -278,40 +222,29 @@ export default function OrdersPage() {
       {targetOrder && (
         <ConfirmationModal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setTargetOrder(null);
-          }}
+          onClose={handleCloseModal}
           onConfirm={handleConfirmAction}
-          title={actionType === 'accept' ? 'Accept Order' : 'Reject Order'}
+          title={isAccept ? 'Accept Order' : 'Reject Order'}
           description={
-            actionType === 'accept'
+            isAccept
               ? `Do you want to accept order ${targetOrder.id} placed by ${targetOrder.buyerName} (${targetOrder.buyerCompany}) for ₹${targetOrder.totalAmount.toLocaleString('en-IN')}?`
               : `Are you sure you want to reject order ${targetOrder.id} from ${targetOrder.buyerName} (${targetOrder.buyerCompany})?`
           }
-          variant={actionType === 'accept' ? 'success' : 'danger'}
-          confirmText={actionType === 'accept' ? 'Accept Order' : 'Reject Order'}
+          variant={isAccept ? 'success' : 'danger'}
+          confirmText={isAccept ? 'Accept Order' : 'Reject Order'}
           cancelText="Cancel"
           tag={
-            actionType === 'accept' ? (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
-                Accept
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF1F2] text-[#E11D48] border border-[#FECDD3]">
-                Reject
-              </span>
-            )
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+              isAccept ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]' : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+            }`}>
+              {isAccept ? 'Accept' : 'Reject'}
+            </span>
           }
-          showRemark={true}
-          remarkRequired={actionType === 'reject'}
-          remarkLabel={
-            actionType === 'accept'
-              ? 'Dispatch Remark / Notes'
-              : 'Reason for Rejection'
-          }
+          showRemark
+          remarkRequired={!isAccept}
+          remarkLabel={isAccept ? 'Dispatch Remark / Notes' : 'Reason for Rejection'}
           remarkPlaceholder={
-            actionType === 'accept'
+            isAccept
               ? 'Add a remark for the buyer (optional)'
               : 'Specify rejection reason (e.g. out of stock on loom runs, unable to meet delivery deadline)...'
           }

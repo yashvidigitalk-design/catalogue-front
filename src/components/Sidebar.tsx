@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FolderTree,
@@ -20,7 +20,10 @@ import {
   Share2,
   X,
   Layers,
+  LogOut,
 } from 'lucide-react';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { triggerToast } from '@/hooks/useToast';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -51,15 +54,27 @@ const SETTINGS_SUB_ITEMS: NavItemConfig[] = [
   { label: 'WhatsApp Sharing', path: '/settings/whatsapp-sharing', icon: Share2 },
 ];
 
+function CollapsedTooltip({ label }: { label: string }) {
+  return (
+    <div className="hidden md:group-hover:block absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 pointer-events-none transition-opacity">
+      <div className="bg-[#0B091C] text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl border border-[#2B2848] whitespace-nowrap">
+        {label}
+      </div>
+    </div>
+  );
+}
+
 export default function Sidebar({
   collapsed,
   onToggleCollapse,
   mobileOpen,
   onCloseMobile,
 }: SidebarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const isSettingsActive = pathname.startsWith('/settings');
   const [settingsOpen, setSettingsOpen] = React.useState(isSettingsActive);
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   React.useEffect(() => {
     if (isSettingsActive) {
@@ -71,8 +86,25 @@ export default function Sidebar({
     return pathname === path || pathname.startsWith(path + '/');
   };
 
+  const getItemClass = (active: boolean) =>
+    active
+      ? 'bg-[#4E45D5] text-white shadow-sm font-semibold'
+      : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]';
+
+  const sidebarWidth = collapsed ? 'w-[72px]' : 'w-[260px]';
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
+    triggerToast(
+      'info',
+      'Logged Out',
+      'You have been logged out of your session.'
+    );
+    router.push('/login');
+  };
+
   const navContent = (
-    <div className="flex flex-col h-full bg-[#100E26] text-white select-none border-r border-[#17142F]">
+    <div className="flex flex-col h-full bg-[#100E26] text-white select-none border-r border-[#17142F] overflow-x-hidden">
       {/* Brand Header */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-[#17142F] shrink-0">
         <Link
@@ -111,7 +143,7 @@ export default function Sidebar({
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1.5 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {PRIMARY_NAV_ITEMS.map((item) => {
           const active = isLinkActive(item.path);
           const Icon = item.icon;
@@ -121,11 +153,10 @@ export default function Sidebar({
               <Link
                 href={item.path}
                 onClick={onCloseMobile}
-                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                title={collapsed ? item.label : undefined}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${getItemClass(
                   active
-                    ? 'bg-[#4E45D5] text-white shadow-sm font-semibold'
-                    : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]'
-                } ${collapsed ? 'justify-center px-0 h-11 w-11 mx-auto' : ''}`}
+                )} ${collapsed ? 'justify-center px-0 h-11 w-11 mx-auto' : ''}`}
               >
                 <Icon
                   className={`w-5 h-5 shrink-0 transition-transform ${
@@ -139,13 +170,7 @@ export default function Sidebar({
               </Link>
 
               {/* Tooltip on collapsed state */}
-              {collapsed && (
-                <div className="hidden md:block absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-[#0B091C] text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl border border-[#2B2848] whitespace-nowrap">
-                    {item.label}
-                  </div>
-                </div>
-              )}
+              {collapsed && <CollapsedTooltip label={item.label} />}
             </div>
           );
         })}
@@ -158,11 +183,10 @@ export default function Sidebar({
               <Link
                 href="/settings/catalogue-templates"
                 onClick={onCloseMobile}
-                className={`flex items-center justify-center h-11 w-11 mx-auto rounded-xl text-sm font-medium transition-all ${
+                title="Settings"
+                className={`flex items-center justify-center h-11 w-11 mx-auto rounded-xl text-sm font-medium transition-all ${getItemClass(
                   isSettingsActive
-                    ? 'bg-[#4E45D5] text-white shadow-sm font-semibold'
-                    : 'text-[#CBC9D9] hover:text-white hover:bg-[#17142F]'
-                }`}
+                )}`}
               >
                 <Settings
                   className={`w-5 h-5 shrink-0 ${
@@ -171,11 +195,7 @@ export default function Sidebar({
                 />
               </Link>
 
-              <div className="hidden md:block absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="bg-[#0B091C] text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl border border-[#2B2848] whitespace-nowrap">
-                  Settings
-                </div>
-              </div>
+              <CollapsedTooltip label="Settings" />
             </div>
           ) : (
             /* Expanded & Mobile: Settings row toggles submenu */
@@ -208,7 +228,7 @@ export default function Sidebar({
               {settingsOpen && (
                 <div className="mt-1 space-y-1 pl-3">
                   {SETTINGS_SUB_ITEMS.map((sub) => {
-                    const isSubActive = pathname === sub.path || pathname.startsWith(sub.path + '/');
+                    const isSubActive = isLinkActive(sub.path);
                     const SubIcon = sub.icon;
 
                     return (
@@ -238,27 +258,52 @@ export default function Sidebar({
         </div>
       </nav>
 
+      {/* Bottom Actions: Logout Button + Collapse Rail */}
+      <div className="p-3 border-t border-[#17142F] shrink-0 space-y-1.5">
+        {/* Logout Button */}
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={() => {
+              onCloseMobile();
+              setShowLogoutConfirm(true);
+            }}
+            className={`flex items-center gap-3.5 rounded-xl text-sm font-medium text-[#F43F5E] hover:text-white hover:bg-[#E11D48]/15 transition-all ${
+              collapsed
+                ? 'justify-center h-11 w-11 mx-auto'
+                : 'w-full px-3 py-2.5'
+            }`}
+            title={collapsed ? 'Logout' : undefined}
+            aria-label="Logout session"
+          >
+            <LogOut className="w-5 h-5 shrink-0 text-[#F43F5E]" />
+            {!collapsed && <span className="truncate">Logout</span>}
+          </button>
 
-      {/* Collapse Rail Toggle Footer (Desktop only) */}
-      <div className="hidden md:flex p-3 border-t border-[#17142F] shrink-0 items-center justify-end">
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className={`h-9 rounded-lg text-[#A9A7C0] hover:text-white hover:bg-[#17142F] transition-all flex items-center justify-center ${
-            collapsed ? 'w-full' : 'w-full gap-2 px-3 justify-between'
-          }`}
-          title={collapsed ? 'Expand sidebar (260px)' : 'Collapse sidebar (72px)'}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {!collapsed && (
-            <span className="text-xs font-medium text-[#A9A7C0]">Collapse Menu</span>
-          )}
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </button>
+          {collapsed && <CollapsedTooltip label="Logout" />}
+        </div>
+
+        {/* Collapse Rail Toggle Footer (Desktop only) */}
+        <div className="hidden md:flex pt-1 border-t border-[#17142F]/60 items-center justify-end">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className={`h-9 rounded-lg text-[#A9A7C0] hover:text-white hover:bg-[#17142F] transition-all flex items-center justify-center ${
+              collapsed ? 'w-full' : 'w-full gap-2 px-3 justify-between'
+            }`}
+            title={collapsed ? 'Expand sidebar (260px)' : 'Collapse sidebar (72px)'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {!collapsed && (
+              <span className="text-xs font-medium text-[#A9A7C0]">Collapse Menu</span>
+            )}
+            {collapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -267,14 +312,10 @@ export default function Sidebar({
     <>
       {/* Desktop Persistent Sidebar */}
       <aside
-        className={`hidden md:block shrink-0 transition-all duration-200 z-30 ${
-          collapsed ? 'w-[72px]' : 'w-[260px]'
-        }`}
+        className={`hidden md:block shrink-0 transition-all duration-200 z-30 ${sidebarWidth}`}
       >
         <div
-          className={`fixed top-0 bottom-0 left-0 transition-all duration-200 z-30 ${
-            collapsed ? 'w-[72px]' : 'w-[260px]'
-          }`}
+          className={`fixed top-0 bottom-0 left-0 transition-all duration-200 z-30 ${sidebarWidth}`}
         >
           {navContent}
         </div>
@@ -293,6 +334,18 @@ export default function Sidebar({
           </div>
         </div>
       )}
+
+      {/* Reusable ConfirmationModal for Logout */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogoutConfirm}
+        title="Confirm Session Logout"
+        description="Are you sure you want to end your current session?"
+        confirmText="Log Out"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </>
   );
 }

@@ -19,7 +19,6 @@ export default function StatCard({
   value,
   change,
   changeType = 'positive',
-  caption = 'vs last month',
   icon,
   iconBg = 'bg-[#EEF2FF] text-[#4E45D5]',
   className = '',
@@ -47,7 +46,7 @@ export default function StatCard({
         )}
       </div>
 
-      {(change || caption) && (
+      {(change) && (
         <div className="mt-4 pt-3 border-t border-[#F1F0F7] flex items-center gap-2 text-xs">
           {change && (
             <span
@@ -64,7 +63,6 @@ export default function StatCard({
               {change}
             </span>
           )}
-          {caption && <span className="text-[#9493A8] font-medium">{caption}</span>}
         </div>
       )}
     </div>

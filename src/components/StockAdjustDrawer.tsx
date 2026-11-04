@@ -17,6 +17,12 @@ interface StockAdjustDrawerProps {
   onSave: (itemId: string, mode: 'in' | 'out', quantity: number, remark?: string) => void;
 }
 
+const STATUS_BADGE_MAP = {
+  out_of_stock: { label: 'Out of Stock', variant: 'red' as const },
+  low_stock: { label: 'Low Stock', variant: 'amber' as const },
+  in_stock: { label: 'In Stock', variant: 'green' as const },
+};
+
 export default function StockAdjustDrawer({
   open,
   onClose,
@@ -26,6 +32,7 @@ export default function StockAdjustDrawer({
   onSave,
 }: StockAdjustDrawerProps) {
   const { showToast } = useToast();
+  const isStockIn = mode === 'in';
 
   const [quantity, setQuantity] = useState<string>('');
   const [remark, setRemark] = useState<string>('');
@@ -54,7 +61,7 @@ export default function StockAdjustDrawer({
   let calculatedAvailable = currentAvailable;
   if (hasValidQty) {
     calculatedAvailable =
-      mode === 'in' ? currentAvailable + numQty : Math.max(0, currentAvailable - numQty);
+      isStockIn ? currentAvailable + numQty : Math.max(0, currentAvailable - numQty);
   }
 
   // Determine resulting stock status
@@ -65,59 +72,46 @@ export default function StockAdjustDrawer({
       ? 'low_stock'
       : 'in_stock';
 
-  const resultingBadge =
-    resultingStatus === 'out_of_stock' ? (
-      <StatusBadge label="Out of Stock" variant="red" size="sm" />
-    ) : resultingStatus === 'low_stock' ? (
-      <StatusBadge label="Low Stock" variant="amber" size="sm" />
-    ) : (
-      <StatusBadge label="In Stock" variant="green" size="sm" />
-    );
+  const badgeConfig = STATUS_BADGE_MAP[resultingStatus];
+
+  const validateQuantity = (val: number): string | null => {
+    if (isNaN(val) || val <= 0) return 'Please enter a positive whole number';
+    if (!isStockIn && val > currentAvailable) {
+      return `Quantity cannot exceed available stock (${currentAvailable} meters)`;
+    }
+    return null;
+  };
 
   const handleQuantityChange = (val: string) => {
     setQuantity(val);
-    const parsed = parseInt(val, 10);
     if (val === '') {
       setError('');
       return;
     }
-    if (isNaN(parsed) || parsed <= 0) {
-      setError('Please enter a positive whole number');
-      return;
-    }
-    if (mode === 'out' && parsed > currentAvailable) {
-      setError(`Quantity cannot exceed available stock (${currentAvailable} meters)`);
-      return;
-    }
-    setError('');
+    setError(validateQuantity(parseInt(val, 10)) || '');
   };
 
   const handleSave = () => {
-    if (!hasValidQty) {
-      setError('Please enter a valid quantity greater than 0');
-      return;
-    }
-    if (mode === 'out' && numQty > currentAvailable) {
-      setError(`Quantity cannot exceed available stock (${currentAvailable} meters)`);
+    const err = validateQuantity(numQty);
+    if (err) {
+      setError(err);
       return;
     }
 
     onSave(item.id, mode, numQty, remark.trim() || undefined);
-    showToast('success', mode === 'in' ? 'Stock added' : 'Stock removed');
+    showToast('success', isStockIn ? 'Stock added' : 'Stock removed');
     onClose();
   };
-
-  const isStockIn = mode === 'in';
 
   const footerActions = (
     <div className="flex items-center gap-2">
       <button
         type="button"
         onClick={handleSave}
-        className={`h-10 px-5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs ${
+        className={`h-10 px-5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs text-white ${
           isStockIn
-            ? 'bg-[#059669] hover:bg-[#047857] text-white'
-            : 'bg-[#E11D48] hover:bg-[#BE123C] text-white'
+            ? 'bg-[#059669] hover:bg-[#047857]'
+            : 'bg-[#E11D48] hover:bg-[#BE123C]'
         }`}
       >
         {isStockIn ? <Plus className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
@@ -184,23 +178,27 @@ export default function StockAdjustDrawer({
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E2E1EC] text-xs">
-            <div className="p-2.5 bg-white border border-[#E2E1EC] rounded-lg">
-              <span className="text-[#9493A8] text-[10px] uppercase font-semibold block">
-                Current Available Stock
-              </span>
-              <span className="font-bold text-base text-[#100E26] font-tabular mt-0.5 block">
-                {item.availableStock.toLocaleString('en-IN')} meters
-              </span>
-            </div>
-
-            <div className="p-2.5 bg-white border border-[#E2E1EC] rounded-lg">
-              <span className="text-[#9493A8] text-[10px] uppercase font-semibold block">
-                Reserved Stock (Orders)
-              </span>
-              <span className="font-bold text-base text-[#5A586E] font-tabular mt-0.5 block">
-                {item.reservedStock.toLocaleString('en-IN')} meters
-              </span>
-            </div>
+            {[
+              {
+                label: 'Current Available Stock',
+                value: `${item.availableStock.toLocaleString('en-IN')} meters`,
+                color: 'text-[#100E26]',
+              },
+              {
+                label: 'Reserved Stock (Orders)',
+                value: `${item.reservedStock.toLocaleString('en-IN')} meters`,
+                color: 'text-[#5A586E]',
+              },
+            ].map((stat) => (
+              <div key={stat.label} className="p-2.5 bg-white border border-[#E2E1EC] rounded-lg">
+                <span className="text-[#9493A8] text-[10px] uppercase font-semibold block">
+                  {stat.label}
+                </span>
+                <span className={`font-bold text-base ${stat.color} font-tabular mt-0.5 block`}>
+                  {stat.value}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -271,7 +269,11 @@ export default function StockAdjustDrawer({
               <span className="text-[10px] uppercase font-semibold text-[#9493A8] block mb-1">
                 New Status
               </span>
-              {resultingBadge}
+              <StatusBadge
+                label={badgeConfig.label}
+                variant={badgeConfig.variant}
+                size="sm"
+              />
             </div>
           </div>
         </div>
@@ -279,4 +281,3 @@ export default function StockAdjustDrawer({
     </CommonDrawer>
   );
 }
-

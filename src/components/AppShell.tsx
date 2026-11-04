@@ -1,13 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Toast from '@/components/Toast';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname === '/login') {
+    return (
+      <div className="min-h-screen bg-[#F7F7FB]">
+        {children}
+        <Toast />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">

@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Trash2,
   Pencil,
-  Eye,
   X,
   Check,
 } from 'lucide-react';
@@ -102,27 +101,35 @@ const INITIAL_INVENTORY: InventoryItem[] = INITIAL_STOCK.map((item, idx) => {
   };
 });
 
+const toStockItem = (item: InventoryItem, defaultReserved = 20): StockItem => ({
+  id: item.id,
+  productName: item.name,
+  designNumber: item.designNumber || 'DS-00',
+  productImage: item.image,
+  fabric: item.fabric || 'Textile Fabric',
+  availableStock: item.stock,
+  stockIn: item.stock * 2,
+  stockOut: item.stock,
+  reservedStock: item.reservedStock ?? defaultReserved,
+  soldStock: item.stock,
+  unit: item.unit,
+});
+
 /**
  * Custom Multiselect Catalogs Cell Component
- * Matches the reference image with tag pills, text cursor input,
- * active purple border, and dropdown popover showing selected items with checkmarks.
  */
 function CatalogSelectCell({
   item,
   allCatalogs,
   onToggleCatalog,
-  onRemoveCatalog,
-  initialOpen = false,
   openUpwards = false,
 }: {
   item: InventoryItem;
   allCatalogs: string[];
   onToggleCatalog: (cat: string) => void;
-  onRemoveCatalog: (cat: string) => void;
-  initialOpen?: boolean;
   openUpwards?: boolean;
 }) {
-  const [isOpen, setIsOpen] = useState(initialOpen);
+  const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -179,7 +186,7 @@ function CatalogSelectCell({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemoveCatalog(cat);
+                  onToggleCatalog(cat);
                 }}
                 className="text-[#64748B] hover:text-[#E11D48] transition-colors"
                 title="Remove catalog"
@@ -252,6 +259,51 @@ function CatalogSelectCell({
   );
 }
 
+/**
+ * Reusable Number Input + Unit Select component (used for Stock and Weight cells)
+ */
+function NumberUnitInput({
+  value,
+  unit,
+  unitOptions,
+  widthClass = 'w-16',
+  isBold = false,
+  onValueChange,
+  onUnitChange,
+}: {
+  value: number;
+  unit: string;
+  unitOptions: string[];
+  widthClass?: string;
+  isBold?: boolean;
+  onValueChange: (val: number) => void;
+  onUnitChange: (unit: string) => void;
+}) {
+  return (
+    <div className="inline-flex items-center shadow-2xs">
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onValueChange(parseFloat(e.target.value) || 0)}
+        className={`${widthClass} px-2 py-1.5 border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5] ${
+          isBold ? 'font-bold' : ''
+        }`}
+      />
+      <select
+        value={unit}
+        onChange={(e) => onUnitChange(e.target.value)}
+        className="px-1.5 py-1.5 bg-[#F7F7FB] border border-[#E2E1EC] rounded-r-lg text-xs font-medium text-[#5A586E] cursor-pointer focus:outline-none"
+      >
+        {unitOptions.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function StockPage() {
   const { showToast } = useToast();
 
@@ -261,24 +313,11 @@ export default function StockPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [catalogFilter, setCatalogFilter] = useState('All Catalogs');
 
-  // Column Visibility
-  const [visibleColumns] = useState({
-    image: true,
-    name: true,
-    catalogs: true,
-    price: true,
-    stock: true,
-    moq: true,
-    weight: true,
-    status: true,
-    actions: true,
-  });
-
   // Sorting
   const [sortField, setSortField] = useState<keyof InventoryItem | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Pagination (10 per page as in Image 1)
+  // Pagination (10 per page)
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -289,38 +328,30 @@ export default function StockPage() {
   const [adjustDrawerOpen, setAdjustDrawerOpen] = useState(false);
   const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
 
-  // Stat Card calculations
-  const totalAvailableStock = useMemo(
-    () => items.reduce((acc, item) => acc + item.stock, 0),
-    [items]
-  );
-  const totalReservedStock = useMemo(
-    () => items.reduce((acc, item) => acc + (item.reservedStock || 0), 0),
-    [items]
-  );
-  const totalStock = totalAvailableStock + totalReservedStock;
+  // Stat calculations in a single pass
+  const { totalAvailableStock, totalReservedStock, totalStock } = useMemo(() => {
+    let available = 0;
+    let reserved = 0;
+    for (const item of items) {
+      available += item.stock;
+      reserved += item.reservedStock || 0;
+    }
+    return {
+      totalAvailableStock: available,
+      totalReservedStock: reserved,
+      totalStock: available + reserved,
+    };
+  }, [items]);
 
   const lowStockStockItems: StockItem[] = useMemo(() => {
     return items
       .filter((i) => i.stock > 0 && i.stock <= threshold)
-      .map((i) => ({
-        id: i.id,
-        productName: i.name,
-        designNumber: i.designNumber || 'DS-00',
-        productImage: i.image,
-        fabric: i.fabric || 'Textile Fabric',
-        availableStock: i.stock,
-        stockIn: i.stock * 2,
-        stockOut: i.stock,
-        reservedStock: i.reservedStock || 40,
-        soldStock: i.stock,
-        unit: i.unit,
-      }));
+      .map((i) => toStockItem(i, 40));
   }, [items, threshold]);
 
   const lowStockCount = lowStockStockItems.length;
 
-  // Filter & Search Logic (backend will handle search & filter; frontend does not filter)
+  // Filter & Search Logic (backend will handle search & filter; frontend displays items)
   const filteredItems = items;
 
   // Sorted Items
@@ -358,7 +389,7 @@ export default function StockPage() {
     );
   };
 
-  // Toggle catalog tag on item
+  // Toggle or remove catalog tag on item
   const handleToggleCatalog = (itemId: string, catName: string) => {
     setItems((prev) =>
       prev.map((item) => {
@@ -371,17 +402,6 @@ export default function StockPage() {
             : [...item.catalogs, catName],
         };
       })
-    );
-  };
-
-  // Remove catalog tag from item
-  const handleRemoveCatalog = (itemId: string, catName: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? { ...item, catalogs: item.catalogs.filter((c) => c !== catName) }
-          : item
-      )
     );
   };
 
@@ -416,20 +436,7 @@ export default function StockPage() {
 
   // Open Stock Adjust Drawer
   const handleOpenStockAdjust = (item: InventoryItem) => {
-    const stockItem: StockItem = {
-      id: item.id,
-      productName: item.name,
-      designNumber: item.designNumber || 'DS-00',
-      productImage: item.image,
-      fabric: item.fabric || 'Textile Fabric',
-      availableStock: item.stock,
-      stockIn: item.stock * 2,
-      stockOut: item.stock,
-      reservedStock: item.reservedStock || 20,
-      soldStock: item.stock,
-      unit: item.unit,
-    };
-    setAdjustItem(stockItem);
+    setAdjustItem(toStockItem(item));
     setAdjustDrawerOpen(true);
   };
 
@@ -443,6 +450,51 @@ export default function StockPage() {
     }
   };
 
+  const renderSortableHeader = (
+    label: string,
+    field?: keyof InventoryItem,
+    widthClass = ''
+  ) => (
+    <th
+      className={`${widthClass} px-3 py-3 select-none ${
+        field ? 'cursor-pointer hover:text-[#100E26]' : ''
+      }`}
+      onClick={field ? () => handleSort(field) : undefined}
+    >
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        <span className="text-[#9493A8]">⇅</span>
+      </div>
+    </th>
+  );
+
+  const stats = [
+    {
+      title: 'Total Stock',
+      value: `${totalStock.toLocaleString('en-IN')} m`,
+      icon: <Package className="w-5 h-5 text-[#4E45D5]" />,
+      iconBg: 'bg-[#EEF2FF]',
+    },
+    {
+      title: 'Available Stock',
+      value: `${totalAvailableStock.toLocaleString('en-IN')} m`,
+      icon: <CheckCircle2 className="w-5 h-5 text-[#059669]" />,
+      iconBg: 'bg-[#ECFDF5]',
+    },
+    {
+      title: 'Reserved Stock',
+      value: `${totalReservedStock.toLocaleString('en-IN')} m`,
+      icon: <Clock className="w-5 h-5 text-[#2563EB]" />,
+      iconBg: 'bg-[#EFF6FF]',
+    },
+    {
+      title: 'Low Stock Products',
+      value: lowStockCount,
+      icon: <AlertTriangle className="w-5 h-5 text-[#D97706]" />,
+      iconBg: 'bg-[#FEF3C7]',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* 1. Common PageHeader */}
@@ -453,30 +505,15 @@ export default function StockPage() {
 
       {/* 2. 4 StatCards calculated dynamically from data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Stock"
-          value={`${totalStock.toLocaleString('en-IN')} m`}
-          icon={<Package className="w-5 h-5 text-[#4E45D5]" />}
-          iconBg="bg-[#EEF2FF]"
-        />
-        <StatCard
-          title="Available Stock"
-          value={`${totalAvailableStock.toLocaleString('en-IN')} m`}
-          icon={<CheckCircle2 className="w-5 h-5 text-[#059669]" />}
-          iconBg="bg-[#ECFDF5]"
-        />
-        <StatCard
-          title="Reserved Stock"
-          value={`${totalReservedStock.toLocaleString('en-IN')} m`}
-          icon={<Clock className="w-5 h-5 text-[#2563EB]" />}
-          iconBg="bg-[#EFF6FF]"
-        />
-        <StatCard
-          title="Low Stock Products"
-          value={lowStockCount}
-          icon={<AlertTriangle className="w-5 h-5 text-[#D97706]" />}
-          iconBg="bg-[#FEF3C7]"
-        />
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            iconBg={stat.iconBg}
+          />
+        ))}
       </div>
 
       {/* 3. Low Stock Alert Settings Card */}
@@ -542,93 +579,31 @@ export default function StockPage() {
                 </th>
 
                 {/* Image */}
-                {visibleColumns.image && (
-                  <th className="w-16 px-3 py-3">Image</th>
-                )}
+                <th className="w-16 px-3 py-3">Image</th>
 
                 {/* Name */}
-                {visibleColumns.name && (
-                  <th
-                    className="min-w-[200px] px-3 py-3 cursor-pointer select-none hover:text-[#100E26]"
-                    onClick={() => handleSort('name')}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Name</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('Name', 'name', 'min-w-[200px]')}
 
                 {/* Catalogs */}
-                {visibleColumns.catalogs && (
-                  <th className="min-w-[240px] px-3 py-3 select-none">
-                    <div className="flex items-center gap-1">
-                      <span>Catalogs</span>
-                      <span className="text-[#9493A8]">⇅</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('Catalogs', undefined, 'min-w-[240px]')}
 
                 {/* Price */}
-                {visibleColumns.price && (
-                  <th
-                    className="w-32 px-3 py-3 cursor-pointer select-none hover:text-[#100E26]"
-                    onClick={() => handleSort('price')}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Price</span>
-                      <span className="text-[#9493A8]">⇅</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('Price', 'price', 'w-32')}
 
                 {/* Stock */}
-                {visibleColumns.stock && (
-                  <th
-                    className="w-32 px-3 py-3 cursor-pointer select-none hover:text-[#100E26]"
-                    onClick={() => handleSort('stock')}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Stock</span>
-                      <span className="text-[#9493A8]">⇅</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('Stock', 'stock', 'w-32')}
 
                 {/* MOQ */}
-                {visibleColumns.moq && (
-                  <th
-                    className="w-24 px-3 py-3 cursor-pointer select-none hover:text-[#100E26]"
-                    onClick={() => handleSort('moq')}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>MOQ</span>
-                      <span className="text-[#9493A8]">⇅</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('MOQ', 'moq', 'w-24')}
 
                 {/* Weight */}
-                {visibleColumns.weight && (
-                  <th className="w-28 px-3 py-3">Weight</th>
-                )}
+                <th className="w-28 px-3 py-3">Weight</th>
 
                 {/* Status */}
-                {visibleColumns.status && (
-                  <th
-                    className="w-28 px-3 py-3 cursor-pointer select-none hover:text-[#100E26]"
-                    onClick={() => handleSort('status')}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Status</span>
-                      <span className="text-[#9493A8]">⇅</span>
-                    </div>
-                  </th>
-                )}
+                {renderSortableHeader('Status', 'status', 'w-28')}
 
                 {/* Actions */}
-                {visibleColumns.actions && (
-                  <th className="w-24 px-3 py-3 text-center">Actions</th>
-                )}
+                <th className="w-24 px-3 py-3 text-center">Actions</th>
               </tr>
             </thead>
 
@@ -661,215 +636,153 @@ export default function StockPage() {
                       </td>
 
                       {/* Image */}
-                      {visibleColumns.image && (
-                        <td className="px-3 py-3">
-                          <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB] shrink-0">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </td>
-                      )}
+                      <td className="px-3 py-3">
+                        <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#E2E1EC] bg-[#F7F7FB] shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </td>
 
                       {/* Name (Inline editable input) */}
-                      {visibleColumns.name && (
-                        <td className="px-3 py-3">
-                          <input
-                            type="text"
-                            value={item.name}
-                            onChange={(e) =>
-                              handleCellChange(item.id, 'name', e.target.value)
-                            }
-                            className="w-full max-w-[220px] px-2.5 py-1.5 border border-[#E2E1EC] rounded-lg text-xs font-semibold text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5] transition-colors"
-                          />
-                        </td>
-                      )}
+                      <td className="px-3 py-3">
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) =>
+                            handleCellChange(item.id, 'name', e.target.value)
+                          }
+                          className="w-full max-w-[220px] px-2.5 py-1.5 border border-[#E2E1EC] rounded-lg text-xs font-semibold text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5] transition-colors"
+                        />
+                      </td>
 
                       {/* Catalogs (Interactive Multiselect Tag Dropdown Input) */}
-                      {visibleColumns.catalogs && (
-                        <td className="px-3 py-3">
-                          <CatalogSelectCell
-                            item={item}
-                            allCatalogs={ALL_CATALOGS}
-                            onToggleCatalog={(cat) => handleToggleCatalog(item.id, cat)}
-                            onRemoveCatalog={(cat) => handleRemoveCatalog(item.id, cat)}
-                            initialOpen={false}
-                            openUpwards={idx >= paginatedItems.length - 3 && paginatedItems.length > 3}
-                          />
-                        </td>
-                      )}
+                      <td className="px-3 py-3">
+                        <CatalogSelectCell
+                          item={item}
+                          allCatalogs={ALL_CATALOGS}
+                          onToggleCatalog={(cat) => handleToggleCatalog(item.id, cat)}
+                          openUpwards={idx >= paginatedItems.length - 3 && paginatedItems.length > 3}
+                        />
+                      </td>
 
                       {/* Price (Inline Currency Prefix + Number Input) */}
-                      {visibleColumns.price && (
-                        <td className="px-3 py-3">
-                          <div className="inline-flex items-center shadow-2xs">
-                            <span className="px-2 py-1.5 bg-[#F7F7FB] border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-medium text-[#5A586E] select-none">
-                              ₹
-                            </span>
-                            <input
-                              type="number"
-                              value={item.price}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  item.id,
-                                  'price',
-                                  parseFloat(e.target.value) || 0
-                                )
-                              }
-                              className="w-20 px-2 py-1.5 border border-[#E2E1EC] rounded-r-lg text-xs font-bold font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5]"
-                            />
-                          </div>
-                        </td>
-                      )}
-
-                      {/* Stock (Inline Number Input + Unit dropdown) */}
-                      {visibleColumns.stock && (
-                        <td className="px-3 py-3">
-                          <div className="inline-flex items-center shadow-2xs">
-                            <input
-                              type="number"
-                              value={item.stock}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  item.id,
-                                  'stock',
-                                  parseInt(e.target.value, 10) || 0
-                                )
-                              }
-                              className="w-16 px-2 py-1.5 border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-bold font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5]"
-                            />
-                            <select
-                              value={item.unit}
-                              onChange={(e) =>
-                                handleCellChange(item.id, 'unit', e.target.value)
-                              }
-                              className="px-1.5 py-1.5 bg-[#F7F7FB] border border-[#E2E1EC] rounded-r-lg text-xs font-medium text-[#5A586E] cursor-pointer focus:outline-none"
-                            >
-                              <option value="piece">piece</option>
-                              <option value="m">m</option>
-                            </select>
-                          </div>
-                        </td>
-                      )}
-
-                      {/* MOQ (Inline Number Input) */}
-                      {visibleColumns.moq && (
-                        <td className="px-3 py-3">
+                      <td className="px-3 py-3">
+                        <div className="inline-flex items-center shadow-2xs">
+                          <span className="px-2 py-1.5 bg-[#F7F7FB] border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-medium text-[#5A586E] select-none">
+                            ₹
+                          </span>
                           <input
                             type="number"
-                            value={item.moq}
+                            value={item.price}
                             onChange={(e) =>
                               handleCellChange(
                                 item.id,
-                                'moq',
-                                parseInt(e.target.value, 10) || 1
+                                'price',
+                                parseFloat(e.target.value) || 0
                               )
                             }
-                            className="w-14 px-2 py-1.5 border border-[#E2E1EC] rounded-lg text-xs font-semibold font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5] shadow-2xs"
+                            className="w-20 px-2 py-1.5 border border-[#E2E1EC] rounded-r-lg text-xs font-bold font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5]"
                           />
-                        </td>
-                      )}
+                        </div>
+                      </td>
+
+                      {/* Stock (Inline Number Input + Unit dropdown) */}
+                      <td className="px-3 py-3">
+                        <NumberUnitInput
+                          value={item.stock}
+                          unit={item.unit}
+                          unitOptions={['piece', 'm']}
+                          widthClass="w-16"
+                          isBold
+                          onValueChange={(val) => handleCellChange(item.id, 'stock', Math.round(val))}
+                          onUnitChange={(u) => handleCellChange(item.id, 'unit', u)}
+                        />
+                      </td>
+
+                      {/* MOQ (Inline Number Input) */}
+                      <td className="px-3 py-3">
+                        <input
+                          type="number"
+                          value={item.moq}
+                          onChange={(e) =>
+                            handleCellChange(
+                              item.id,
+                              'moq',
+                              parseInt(e.target.value, 10) || 1
+                            )
+                          }
+                          className="w-14 px-2 py-1.5 border border-[#E2E1EC] rounded-lg text-xs font-semibold font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5] shadow-2xs"
+                        />
+                      </td>
 
                       {/* Weight (Inline Number Input + Unit dropdown) */}
-                      {visibleColumns.weight && (
-                        <td className="px-3 py-3">
-                          <div className="inline-flex items-center shadow-2xs">
-                            <input
-                              type="number"
-                              value={item.weight}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  item.id,
-                                  'weight',
-                                  parseFloat(e.target.value) || 0
-                                )
-                              }
-                              className="w-12 px-2 py-1.5 border border-r-0 border-[#E2E1EC] rounded-l-lg text-xs font-tabular text-[#100E26] bg-white focus:outline-none focus:border-[#4E45D5]"
-                            />
-                            <select
-                              value={item.weightUnit}
-                              onChange={(e) =>
-                                handleCellChange(item.id, 'weightUnit', e.target.value)
-                              }
-                              className="px-1.5 py-1.5 bg-[#F7F7FB] border border-[#E2E1EC] rounded-r-lg text-xs text-[#5A586E] cursor-pointer focus:outline-none"
-                            >
-                              <option value="g">g</option>
-                              <option value="GSM">GSM</option>
-                            </select>
-                          </div>
-                        </td>
-                      )}
+                      <td className="px-3 py-3">
+                        <NumberUnitInput
+                          value={item.weight}
+                          unit={item.weightUnit}
+                          unitOptions={['g', 'GSM']}
+                          widthClass="w-12"
+                          onValueChange={(val) => handleCellChange(item.id, 'weight', val)}
+                          onUnitChange={(u) => handleCellChange(item.id, 'weightUnit', u)}
+                        />
+                      </td>
 
                       {/* Status (Dropdown) */}
-                      {visibleColumns.status && (
-                        <td className="px-3 py-3">
-                          <select
-                            value={item.status}
-                            onChange={(e) =>
-                              handleCellChange(
-                                item.id,
-                                'status',
-                                e.target.value as InventoryItem['status']
-                              )
-                            }
-                            className={`border rounded-lg px-2.5 py-1.5 text-xs font-medium cursor-pointer focus:outline-none ${
-                              item.status === 'Disabled'
-                                ? 'border-[#FCA5A5] bg-[#FEF2F2] text-[#B91C1C]'
-                                : item.status === 'Draft'
-                                ? 'border-[#FCD34D] bg-[#FFFBEB] text-[#B45309]'
-                                : 'border-[#A7F3D0] bg-[#ECFDF5] text-[#047857]'
-                            }`}
+                      <td className="px-3 py-3">
+                        <select
+                          value={item.status}
+                          onChange={(e) =>
+                            handleCellChange(
+                              item.id,
+                              'status',
+                              e.target.value as InventoryItem['status']
+                            )
+                          }
+                          className={`border rounded-lg px-2.5 py-1.5 text-xs font-medium cursor-pointer focus:outline-none ${
+                            item.status === 'Disabled'
+                              ? 'border-[#FCA5A5] bg-[#FEF2F2] text-[#B91C1C]'
+                              : item.status === 'Draft'
+                              ? 'border-[#FCD34D] bg-[#FFFBEB] text-[#B45309]'
+                              : 'border-[#A7F3D0] bg-[#ECFDF5] text-[#047857]'
+                          }`}
+                        >
+                          <option value="Enabled">Enabled</option>
+                          <option value="Active">Active</option>
+                          <option value="Draft">Draft</option>
+                          <option value="Disabled">Disabled</option>
+                        </select>
+                      </td>
+
+                      {/* Action icons: Delete Button + Edit */}
+                      <td className="px-3 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => setItemToDelete(item)}
+                            className="p-1.5 rounded-md text-[#5A586E] hover:text-[#E11D48] hover:bg-[#FFF1F2] transition-colors"
+                            title="Delete from inventory"
+                            aria-label="Delete item"
                           >
-                            <option value="Enabled">Enabled</option>
-                            <option value="Active">Active</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Disabled">Disabled</option>
-                          </select>
-                        </td>
-                      )}
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
 
-                      {/* Action icons: Delete Button + Edit + View */}
-                      {visibleColumns.actions && (
-                        <td className="px-3 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {/* Delete Button */}
-                            <button
-                              type="button"
-                              onClick={() => setItemToDelete(item)}
-                              className="p-1.5 rounded-md text-[#5A586E] hover:text-[#E11D48] hover:bg-[#FFF1F2] transition-colors"
-                              title="Delete from inventory"
-                              aria-label="Delete item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* Stock In / Out Adjustment */}
-                            <button
-                              type="button"
-                              onClick={() => handleOpenStockAdjust(item)}
-                              className="p-1.5 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
-                              title="Adjust Stock In/Out"
-                              aria-label="Adjust stock"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* View / Details */}
-                            <button
-                              type="button"
-                              onClick={() => handleOpenStockAdjust(item)}
-                              className="p-1.5 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
-                              title="View details"
-                              aria-label="View details"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                          {/* Stock In / Out Adjustment */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStockAdjust(item)}
+                            className="p-1.5 rounded-md text-[#5A586E] hover:text-[#4E45D5] hover:bg-[#EEF2FF] transition-colors"
+                            title="Adjust Stock In/Out"
+                            aria-label="Adjust stock"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -878,7 +791,7 @@ export default function StockPage() {
           </table>
         </div>
 
-        {/* Bottom Pagination matching Image 1 */}
+        {/* Bottom Pagination */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
